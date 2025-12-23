@@ -7,6 +7,13 @@
 #include "SnakeGameManager.generated.h"
 
 UENUM(BlueprintType)
+enum class ESnakeGameState : uint8
+{
+	Playing,
+	GameOver
+};
+
+UENUM(BlueprintType)
 enum class ESnakeDirection : uint8
 {
 	Up,
@@ -40,15 +47,27 @@ public:
 	
 	void StepMove();
 	
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStateChanged, ESnakeGameState)
+	FOnGameStateChanged OnGameStateChanged;
+	
 public:
 	UPROPERTY(BlueprintReadOnly)
 	FIntPoint HeadGrid = FIntPoint(0, 0);
+	
+	UPROPERTY()
+	FIntPoint PrevHeadGrid = FIntPoint(0, 0);;
 	
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FIntPoint> BodyGrids;
 	
 	UPROPERTY(BlueprintReadOnly)
 	FIntPoint FoodGrid = FIntPoint(0, 0);
+	
+	UPROPERTY()
+	TObjectPtr<AActor> FoodActor;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Food");
+	TSubclassOf<AActor> FoodActorClass;
 	
 	UPROPERTY(BlueprintReadOnly)
 	ESnakeDirection Direction = ESnakeDirection::Right;
@@ -62,6 +81,23 @@ public:
 	UPROPERTY(EditAnywhere)
 	float GridSize = 100.f;
 	
+	ESnakeGameState GameState = ESnakeGameState::Playing;
+	
+	void RestartGame();
+	
 private:
+	void SetGameState(ESnakeGameState NewState);
+	
 	FTimerHandle MoveTimer;
+	
+	UPROPERTY()
+	TArray<TObjectPtr<AActor>> Segments;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Snake")
+	TSubclassOf<AActor> SnakeSegmentClass;
+	
+	void SpawnInitialSegments();
+	void SyncSegments();
+	void SpawnFood();
+	bool IsGridOccupied(const FIntPoint& GridPoint) const;
 };

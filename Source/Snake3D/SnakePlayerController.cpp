@@ -16,6 +16,7 @@ void ASnakePlayerController::BeginPlay()
 	Super::BeginPlay();
 	
 	CacheSnakeGameManager();
+	BindGameState();
 	ApplyInitialCamera();
 	BindInput();
 }
@@ -47,6 +48,7 @@ void ASnakePlayerController::ApplyInitialCamera()
 					SetViewTarget(Cam, Params);
 				}
 			}
+			CamSys->BindToGameManager(SnakeGameManager);
 		}
 	}
 }
@@ -73,6 +75,7 @@ void ASnakePlayerController::BindInput()
 		EIC->BindAction(IA_Down, ETriggerEvent::Triggered, this, &ASnakePlayerController::OnDown);
 		EIC->BindAction(IA_Right, ETriggerEvent::Triggered, this, &ASnakePlayerController::OnRight);
 		EIC->BindAction(IA_Left, ETriggerEvent::Triggered, this, &ASnakePlayerController::OnLeft);
+		EIC->BindAction(IA_Restart, ETriggerEvent::Triggered, this, &ASnakePlayerController::OnRestart);
 	}
 }
 
@@ -105,5 +108,32 @@ void ASnakePlayerController::OnRight(const FInputActionValue& Value)
 	if (SnakeGameManager->Direction != ESnakeDirection::Left)
 	{
 		SnakeGameManager->SetDirection(ESnakeDirection::Right);
+	}
+}
+
+void ASnakePlayerController::OnRestart(const FInputActionValue& Value)
+{
+	if (SnakeGameManager && SnakeGameManager->GameState == ESnakeGameState::GameOver)
+	{
+		SnakeGameManager->RestartGame();
+	}
+}
+
+void ASnakePlayerController::BindGameState()
+{
+	SnakeGameManager->OnGameStateChanged.AddUObject(this, &ASnakePlayerController::OnGameStateChanged);
+}
+
+void ASnakePlayerController::OnGameStateChanged(ESnakeGameState NewState)
+{
+	if (NewState == ESnakeGameState::GameOver)
+	{
+		SetIgnoreMoveInput(true);
+		SetIgnoreLookInput(true);
+	}
+	else
+	{
+		SetIgnoreMoveInput(false);
+		SetIgnoreLookInput(false);
 	}
 }

@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "SnakePlayerController.generated.h"
 
+enum class ESnakeGameState : uint8;
 struct FInputActionValue;
 class ASnakeGameManager;
 class UInputMappingContext;
@@ -36,6 +37,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly)
 	UInputAction* IA_Right;
+	
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* IA_Restart;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Camera")
@@ -52,4 +56,8 @@ private:
 	void OnDown(const FInputActionValue& Value);
 	void OnLeft(const FInputActionValue& Value);
 	void OnRight(const FInputActionValue& Value);
+	void OnRestart(const FInputActionValue& Value);
+	
+	void BindGameState();
+	void OnGameStateChanged(ESnakeGameState NewState);
 };
