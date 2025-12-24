@@ -6,20 +6,14 @@
 #include "GameFramework/Actor.h"
 #include "SnakeGameManager.generated.h"
 
+class ASnakeItem;
+class ASnake;
+
 UENUM(BlueprintType)
 enum class ESnakeGameState : uint8
 {
 	Playing,
 	GameOver
-};
-
-UENUM(BlueprintType)
-enum class ESnakeDirection : uint8
-{
-	Up,
-	Down,
-	Left,
-	Right
 };
 
 UCLASS()
@@ -39,38 +33,15 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
-	UFUNCTION(BlueprintCallable)
-	void SetDirection(ESnakeDirection Direction);
-	
-	UFUNCTION(BlueprintCallable)
-	FVector GridToWorld(const FIntPoint& GridPoint) const;
-	
+	static FVector GridToWorld(const FIntPoint& GridPoint);
 	void StepMove();
-	
+
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStateChanged, ESnakeGameState)
 	FOnGameStateChanged OnGameStateChanged;
 	
 public:
-	UPROPERTY(BlueprintReadOnly)
-	FIntPoint HeadGrid = FIntPoint(0, 0);
-	
 	UPROPERTY()
-	FIntPoint PrevHeadGrid = FIntPoint(0, 0);;
-	
-	UPROPERTY(BlueprintReadOnly)
-	TArray<FIntPoint> BodyGrids;
-	
-	UPROPERTY(BlueprintReadOnly)
-	FIntPoint FoodGrid = FIntPoint(0, 0);
-	
-	UPROPERTY()
-	TObjectPtr<AActor> FoodActor;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Food");
-	TSubclassOf<AActor> FoodActorClass;
-	
-	UPROPERTY(BlueprintReadOnly)
-	ESnakeDirection Direction = ESnakeDirection::Right;
+	TObjectPtr<ASnake> PlayerSnake;
 
 	UPROPERTY(EditAnywhere)
 	int32 GridMin = -20;
@@ -78,8 +49,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	int32 GridMax = 20;
 	
-	UPROPERTY(EditAnywhere)
-	float GridSize = 100.f;
+	static constexpr float GridSize = 100.f;
 	
 	ESnakeGameState GameState = ESnakeGameState::Playing;
 	
@@ -90,14 +60,15 @@ private:
 	
 	FTimerHandle MoveTimer;
 	
-	UPROPERTY()
-	TArray<TObjectPtr<AActor>> Segments;
-	
 	UPROPERTY(EditDefaultsOnly, Category="Snake")
-	TSubclassOf<AActor> SnakeSegmentClass;
+	TSubclassOf<ASnake> PlayerSnakeClass;
 	
-	void SpawnInitialSegments();
-	void SyncSegments();
+	UPROPERTY()
+	TObjectPtr<ASnakeItem> ItemFood;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Food");
+	TSubclassOf<ASnakeItem> FoodActorClass;
+	
 	void SpawnFood();
 	bool IsGridOccupied(const FIntPoint& GridPoint) const;
 };

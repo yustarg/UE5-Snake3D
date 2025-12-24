@@ -6,6 +6,7 @@
 #include "CameraRig.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Snake.h"
 #include "SnakeCameraSubsystem.h"
 #include "SnakeGameManager.h"
 #include "Camera/CameraActor.h"
@@ -81,33 +82,33 @@ void ASnakePlayerController::BindInput()
 
 void ASnakePlayerController::OnUp(const FInputActionValue& Value)
 {
-	if (SnakeGameManager->Direction != ESnakeDirection::Down)
+	if (SnakeGameManager->PlayerSnake->Direction != ESnakeDirection::Down)
 	{
-		SnakeGameManager->SetDirection(ESnakeDirection::Up);
+		SnakeGameManager->PlayerSnake->SetDirection(ESnakeDirection::Up);
 	}
 }
 
 void ASnakePlayerController::OnDown(const FInputActionValue& Value)
 {
-	if (SnakeGameManager->Direction != ESnakeDirection::Up)
+	if (SnakeGameManager->PlayerSnake->Direction != ESnakeDirection::Up)
 	{
-		SnakeGameManager->SetDirection(ESnakeDirection::Down);
+		SnakeGameManager->PlayerSnake->SetDirection(ESnakeDirection::Down);
 	}
 }
 
 void ASnakePlayerController::OnLeft(const FInputActionValue& Value)
 {
-	if (SnakeGameManager->Direction != ESnakeDirection::Right)
+	if (SnakeGameManager->PlayerSnake->Direction != ESnakeDirection::Right)
 	{
-		SnakeGameManager->SetDirection(ESnakeDirection::Left);
+		SnakeGameManager->PlayerSnake->SetDirection(ESnakeDirection::Left);
 	}
 }
 
 void ASnakePlayerController::OnRight(const FInputActionValue& Value)
 {
-	if (SnakeGameManager->Direction != ESnakeDirection::Left)
+	if (SnakeGameManager->PlayerSnake->Direction != ESnakeDirection::Left)
 	{
-		SnakeGameManager->SetDirection(ESnakeDirection::Right);
+		SnakeGameManager->PlayerSnake->SetDirection(ESnakeDirection::Right);
 	}
 }
 

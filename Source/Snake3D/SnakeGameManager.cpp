@@ -2,8 +2,8 @@
 
 
 #include "SnakeGameManager.h"
-
-#include "SnakeSegment.h"
+#include "Snake.h"
+#include "Items/SnakeItem.h"
 
 // Sets default values
 ASnakeGameManager::ASnakeGameManager()
@@ -18,12 +18,8 @@ void ASnakeGameManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	BodyGrids = {
-		FIntPoint(-1,0),
-		FIntPoint(-2,0),
-	}; 
-	
-	SpawnInitialSegments();
+	PlayerSnake = GetWorld()->SpawnActor<ASnake>(PlayerSnakeClass);
+	PlayerSnake->Initialize();
 	
 	GetWorld()->GetTimerManager().SetTimer(MoveTimer, this, &ASnakeGameManager::StepMove, 0.25f, true);
 	
@@ -37,38 +33,19 @@ void ASnakeGameManager::Tick(float DeltaTime)
 
 }
 
-void ASnakeGameManager::SetDirection(ESnakeDirection NewDirection)
-{
-	Direction = NewDirection;
-}
-
-FVector ASnakeGameManager::GridToWorld(const FIntPoint& GridPoint) const
+FVector ASnakeGameManager::GridToWorld(const FIntPoint& GridPoint)
 {
 	return FVector(GridPoint.X * GridSize, GridPoint.Y * GridSize, 0);
 }
 
 void ASnakeGameManager::StepMove()
 {
-	PrevHeadGrid = HeadGrid;
+	if (!PlayerSnake) return;
 	
-	FIntPoint NewHeadGrid(0, 0);
-	switch (Direction)
-	{
-		case ESnakeDirection::Left:
-			NewHeadGrid = HeadGrid + FIntPoint(0, -1);
-			break;
-		case ESnakeDirection::Right:
-			NewHeadGrid = HeadGrid + FIntPoint(0, 1);
-			break;
-		case ESnakeDirection::Up:
-			NewHeadGrid = HeadGrid + FIntPoint(1, 0);
-			break;
-		case ESnakeDirection::Down:
-			NewHeadGrid = HeadGrid + FIntPoint(-1, 0);
-			break;
-	}
+	PlayerSnake->StepMove();
 	
-	if ((NewHeadGrid.X < GridMin || NewHeadGrid.X > GridMax) || (NewHeadGrid.Y < GridMin || NewHeadGrid.Y > GridMax))
+	if ((PlayerSnake->GetHead().X < GridMin || PlayerSnake->GetHead().X > GridMax) || 
+		(PlayerSnake->GetHead().Y < GridMin || PlayerSnake->GetHead().Y > GridMax))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Game Over: Wall"));
 		GetWorld()->GetTimerManager().ClearTimer(MoveTimer);
@@ -76,27 +53,21 @@ void ASnakeGameManager::StepMove()
 		return;
 	}
 	
-	if (BodyGrids.Contains(NewHeadGrid))
+	if (PlayerSnake->GetBody().Contains(PlayerSnake->GetHead()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Game Over: Self"));
 		GetWorld()->GetTimerManager().ClearTimer(MoveTimer);
 		SetGameState(ESnakeGameState::GameOver);
 		return;
 	}
-	
-	BodyGrids.Insert(HeadGrid, 0);
-	HeadGrid = NewHeadGrid;
 
-	if (HeadGrid == FoodGrid)
+	if (PlayerSnake->GetHead() == ItemFood->Grid)
 	{
+		ItemFood->ApplyTo(PlayerSnake);
 		SpawnFood();
 	}
-	else
-	{
-		BodyGrids.Pop();
-	}
 	
-	SyncSegments();
+	PlayerSnake->SyncSegments();
 }
 
 void ASnakeGameManager::SetGameState(const ESnakeGameState NewState)
@@ -105,72 +76,6 @@ void ASnakeGameManager::SetGameState(const ESnakeGameState NewState)
 	
 	GameState = NewState;
 	OnGameStateChanged.Broadcast(NewState);
-}
-
-void ASnakeGameManager::SpawnInitialSegments()
-{
-	if (!SnakeSegmentClass) return;
-
-	for (auto Seg : Segments)
-	{
-		if (Seg) Seg->Destroy();
-	}
-	Segments.Empty();
-	
-	FVector HeadPos = GridToWorld(HeadGrid);
-	AActor* HeadSeg = GetWorld()->SpawnActor<AActor>(SnakeSegmentClass, HeadPos, FRotator::ZeroRotator);
-	Segments.Add(HeadSeg);
-	
-	for (const FIntPoint& BodyGrid : BodyGrids)
-	{
-		FVector BodyPos = GridToWorld(BodyGrid);
-		AActor* BodySeg = GetWorld()->SpawnActor<AActor>(SnakeSegmentClass, BodyPos, FRotator::ZeroRotator);
-		Segments.Add(BodySeg);
-	}
-}
-
-void ASnakeGameManager::SyncSegments()
-{
-	const int32 SegmentsNeeded = BodyGrids.Num() + 1;
-
-	while (Segments.Num() < SegmentsNeeded)
-	{
-		if (!SnakeSegmentClass) break;
-		
-		AActor* Seg = GetWorld()->SpawnActor<AActor>(SnakeSegmentClass, 
-			FVector::Zero(), FRotator::ZeroRotator);
-		Segments.Add(Seg);
-	}
-	
-	while (Segments.Num() > SegmentsNeeded)
-	{
-		if (AActor* Seg = Segments.Last())
-		{
-			Seg->Destroy();
-		}
-		Segments.Pop();
-	}
-	
-	// Head
-	if (Segments.Num() > 0)
-	{
-		ASnakeSegment* Head = Cast<ASnakeSegment>(Segments[0]);
-		Head->SetSegmentType(ESnakeSegmentType::Head);
-		Head->SetFacingDirection(HeadGrid - PrevHeadGrid);
-		Head->SetActorLocation(GridToWorld(HeadGrid));
-	}
-	
-	// Body
-	for (int i = 0; i < BodyGrids.Num(); ++i)
-	{
-		const int SegIndex = i + 1;
-
-		if (ASnakeSegment* Body = Cast<ASnakeSegment>(Segments[SegIndex]))
-		{
-			Body->SetSegmentType(ESnakeSegmentType::Body);
-			Body->SetActorLocation(GridToWorld(BodyGrids[i]));
-		}
-	}
 }
 
 void ASnakeGameManager::SpawnFood()
@@ -198,50 +103,38 @@ void ASnakeGameManager::SpawnFood()
 	}
 	
 	const int RandomIndex = FMath::RandRange(0, FreeGrids.Num() - 1);
-	FoodGrid = FreeGrids[RandomIndex];
+	const FIntPoint FoodGrid = FreeGrids[RandomIndex];
 	const FVector RandomPos = GridToWorld(FoodGrid);
 	
-	if (FoodActor)
+	if (ItemFood)
 	{
-		FoodActor->SetActorLocation(RandomPos);
+		ItemFood->SetActorLocation(RandomPos);
 	}
 	else
 	{
-		FoodActor = GetWorld()->SpawnActor<AActor>(FoodActorClass, RandomPos, FRotator::ZeroRotator);
+		ItemFood = GetWorld()->SpawnActor<ASnakeItem>(FoodActorClass, RandomPos, FRotator::ZeroRotator);
 	}
+	
+	ItemFood->Grid = FoodGrid;
 }
 
 bool ASnakeGameManager::IsGridOccupied(const FIntPoint& GridPoint) const
 {
-	if (GridPoint == HeadGrid) return true;
+	if (GridPoint == PlayerSnake->GetHead()) return true;
 	
-	return BodyGrids.Contains(GridPoint);
+	return PlayerSnake->GetBody().Contains(GridPoint);
 }
 
 void ASnakeGameManager::RestartGame()
 {
-	for (AActor* Seg : Segments)
+	PlayerSnake->Restart();
+	if (ItemFood)
 	{
-		if (Seg) Seg->Destroy();
-	}
-	Segments.Empty();
-	
-	if (FoodActor)
-	{
-		FoodActor->Destroy();
-		FoodActor = nullptr;
+		ItemFood->Destroy();
+		ItemFood = nullptr;
 	}
 	
-	HeadGrid = FIntPoint(0, 0);
-	BodyGrids = {
-		FIntPoint(-1, 0),
-		FIntPoint(-2, 0)
-	};
-	PrevHeadGrid = HeadGrid;
-	
-	SpawnInitialSegments();
 	SpawnFood();
-	
 	SetGameState(ESnakeGameState::Playing);
 	GetWorld()->GetTimerManager().SetTimer(MoveTimer, this,
 		&ASnakeGameManager::StepMove,
