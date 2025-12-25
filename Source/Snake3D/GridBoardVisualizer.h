@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "GridBoardVisualizer.generated.h"
 
+class USnakeGridSubsystem;
+
 UCLASS()
 class SNAKE3D_API AGridBoardVisualizer : public AActor
 {
@@ -24,4 +26,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void DrawDebugGrid() const;
+	
+private:
+	UPROPERTY()
+	USnakeGridSubsystem* GridSubsystem;
 };
