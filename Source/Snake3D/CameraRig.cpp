@@ -3,7 +3,7 @@
 
 #include "CameraRig.h"
 
-#include "SnakeCameraSubsystem.h"
+#include "Subsystems/LocalPlayer/SnakeCameraSubsystem.h"
 
 // Sets default values
 ACameraRig::ACameraRig()

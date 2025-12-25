@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Snake.generated.h"
 
+class USnakeGridSubsystem;
+
 UENUM(BlueprintType)
 enum class ESnakeDirection : uint8
 {
@@ -46,6 +48,9 @@ public:
 	void ModifySpeed(float Multiplier, float Duration = 0.f);
 	
 private:
+	UPROPERTY()
+	USnakeGridSubsystem* GridSubsystem;
+	
 	FIntPoint HeadGrid;
 	FIntPoint PrevHeadGrid;
 	TArray<FIntPoint> BodyGrids;

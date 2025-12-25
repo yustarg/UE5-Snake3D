@@ -7,7 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Snake.h"
-#include "SnakeCameraSubsystem.h"
+#include "Subsystems/LocalPlayer/SnakeCameraSubsystem.h"
 #include "SnakeGameManager.h"
 #include "Camera/CameraActor.h"
 #include "Kismet/GameplayStatics.h"

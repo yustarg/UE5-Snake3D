@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "SnakeGameManager.generated.h"
 
+class USnakeGridSubsystem;
 class ASnakeItem;
 class ASnake;
 
@@ -32,31 +33,21 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	
-	static FVector GridToWorld(const FIntPoint& GridPoint);
 	void StepMove();
-
+	void RestartGame();
+	
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStateChanged, ESnakeGameState)
 	FOnGameStateChanged OnGameStateChanged;
 	
-public:
 	UPROPERTY()
 	TObjectPtr<ASnake> PlayerSnake;
-
-	UPROPERTY(EditAnywhere)
-	int32 GridMin = -20;
-
-	UPROPERTY(EditAnywhere)
-	int32 GridMax = 20;
-	
-	static constexpr float GridSize = 100.f;
 	
 	ESnakeGameState GameState = ESnakeGameState::Playing;
-	
-	void RestartGame();
-	
+
 private:
 	void SetGameState(ESnakeGameState NewState);
+	void SpawnFood();
+	bool IsGridOccupied(const FIntPoint& GridPoint) const;
 	
 	FTimerHandle MoveTimer;
 	
@@ -69,6 +60,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category="Food");
 	TSubclassOf<ASnakeItem> FoodActorClass;
 	
-	void SpawnFood();
-	bool IsGridOccupied(const FIntPoint& GridPoint) const;
+	UPROPERTY()
+	USnakeGridSubsystem* GridSubsystem;
 };

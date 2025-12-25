@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Snake.h"
-
-#include "SnakeGameManager.h"
 #include "SnakeSegment.h"
+#include "Subsystems/World/SnakeGridSubsystem.h"
 
 // Sets default values
 ASnake::ASnake()
@@ -18,6 +17,7 @@ void ASnake::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	GridSubsystem = GetWorld()->GetSubsystem<USnakeGridSubsystem>();
 }
 
 // Called every frame
@@ -101,7 +101,7 @@ void ASnake::SyncSegments()
 		ASnakeSegment* Head = Cast<ASnakeSegment>(Segments[0]);
 		Head->SetSegmentType(ESnakeSegmentType::Head);
 		Head->SetFacingDirection(HeadGrid - PrevHeadGrid);
-		Head->SetActorLocation(ASnakeGameManager::GridToWorld(HeadGrid));
+		Head->SetActorLocation(GridSubsystem->GridToWorld(HeadGrid));
 	}
 	
 	// Body
@@ -112,7 +112,7 @@ void ASnake::SyncSegments()
 		if (ASnakeSegment* Body = Cast<ASnakeSegment>(Segments[SegIndex]))
 		{
 			Body->SetSegmentType(ESnakeSegmentType::Body);
-			Body->SetActorLocation(ASnakeGameManager::GridToWorld(BodyGrids[i]));
+			Body->SetActorLocation(GridSubsystem->GridToWorld(BodyGrids[i]));
 		}
 	}
 }
@@ -155,13 +155,13 @@ void ASnake::SpawnInitialSegments()
 	}
 	Segments.Empty();
 	
-	FVector HeadPos = ASnakeGameManager::GridToWorld(HeadGrid);
+	FVector HeadPos = GridSubsystem->GridToWorld(HeadGrid);
 	AActor* HeadSeg = GetWorld()->SpawnActor<AActor>(SnakeSegmentClass, HeadPos, FRotator::ZeroRotator);
 	Segments.Add(HeadSeg);
 	
 	for (const FIntPoint& BodyGrid : BodyGrids)
 	{
-		FVector BodyPos = ASnakeGameManager::GridToWorld(BodyGrid);
+		FVector BodyPos = GridSubsystem->GridToWorld(BodyGrid);
 		AActor* BodySeg = GetWorld()->SpawnActor<AActor>(SnakeSegmentClass, BodyPos, FRotator::ZeroRotator);
 		Segments.Add(BodySeg);
 	}

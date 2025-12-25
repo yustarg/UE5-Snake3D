@@ -3,7 +3,9 @@
 
 #include "SnakeGameManager.h"
 #include "Snake.h"
+#include "Items/SnakeFood.h"
 #include "Items/SnakeItem.h"
+#include "Subsystems/World/SnakeGridSubsystem.h"
 
 // Sets default values
 ASnakeGameManager::ASnakeGameManager()
@@ -17,6 +19,8 @@ ASnakeGameManager::ASnakeGameManager()
 void ASnakeGameManager::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	GridSubsystem = GetWorld()->GetSubsystem<USnakeGridSubsystem>();
 	
 	PlayerSnake = GetWorld()->SpawnActor<ASnake>(PlayerSnakeClass);
 	PlayerSnake->Initialize();
@@ -33,19 +37,13 @@ void ASnakeGameManager::Tick(float DeltaTime)
 
 }
 
-FVector ASnakeGameManager::GridToWorld(const FIntPoint& GridPoint)
-{
-	return FVector(GridPoint.X * GridSize, GridPoint.Y * GridSize, 0);
-}
-
 void ASnakeGameManager::StepMove()
 {
 	if (!PlayerSnake) return;
 	
 	PlayerSnake->StepMove();
 	
-	if ((PlayerSnake->GetHead().X < GridMin || PlayerSnake->GetHead().X > GridMax) || 
-		(PlayerSnake->GetHead().Y < GridMin || PlayerSnake->GetHead().Y > GridMax))
+	if (!GridSubsystem->IsInside(PlayerSnake->GetHead()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Game Over: Wall"));
 		GetWorld()->GetTimerManager().ClearTimer(MoveTimer);
@@ -84,9 +82,12 @@ void ASnakeGameManager::SpawnFood()
 	
 	TArray<FIntPoint> FreeGrids;
 
-	for (int i = GridMin; i <= GridMax; ++i)
+	const FIntPoint GridMin = GridSubsystem->GetGridMin();
+	const FIntPoint GridMax = GridSubsystem->GetGridMax();
+	
+	for (int i = GridMin.X; i <= GridMax.X; ++i)
 	{
-		for (int j = GridMin; j <= GridMax; ++j)
+		for (int j = GridMin.Y; j <= GridMax.Y; ++j)
 		{
 			FIntPoint GridPoint(i, j);
 			if (!IsGridOccupied(GridPoint))
@@ -104,7 +105,7 @@ void ASnakeGameManager::SpawnFood()
 	
 	const int RandomIndex = FMath::RandRange(0, FreeGrids.Num() - 1);
 	const FIntPoint FoodGrid = FreeGrids[RandomIndex];
-	const FVector RandomPos = GridToWorld(FoodGrid);
+	const FVector RandomPos = GridSubsystem->GridToWorld(FoodGrid);
 	
 	if (ItemFood)
 	{
@@ -112,7 +113,7 @@ void ASnakeGameManager::SpawnFood()
 	}
 	else
 	{
-		ItemFood = GetWorld()->SpawnActor<ASnakeItem>(FoodActorClass, RandomPos, FRotator::ZeroRotator);
+		ItemFood = GetWorld()->SpawnActor<ASnakeFood>(FoodActorClass, RandomPos, FRotator::ZeroRotator);
 	}
 	
 	ItemFood->Grid = FoodGrid;

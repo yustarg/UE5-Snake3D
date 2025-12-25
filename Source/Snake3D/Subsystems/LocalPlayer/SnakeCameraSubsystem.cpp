@@ -2,8 +2,7 @@
 
 
 #include "SnakeCameraSubsystem.h"
-
-#include "SnakeGameManager.h"
+#include "Snake3D/SnakeGameManager.h"
 
 ACameraRig* USnakeCameraSubsystem::GetCurrentCameraRig() const
 {
