@@ -29,8 +29,6 @@ void ASnakeFood::Tick(float DeltaTime)
 
 void ASnakeFood::ApplyTo(ASnake* Snake)
 {
-	Super::ApplyTo(Snake);
-	
 	if (!Snake) return;
 	Snake->Grow();
 }

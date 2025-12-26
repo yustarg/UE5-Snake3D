@@ -61,6 +61,7 @@ void ASnakeGameManager::StepMove()
 
 	if (PlayerSnake->GetHead() == ItemFood->Grid)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Item class: %s"),  *ItemFood->GetClass()->GetName());
 		ItemFood->ApplyTo(PlayerSnake);
 		SpawnFood();
 	}

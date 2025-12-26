@@ -3,6 +3,18 @@
 
 #include "SnakeGridSubsystem.h"
 
+#include "Snake3D/WorldSettings/GridWorldSettings.h"
+
+void USnakeGridSubsystem::OnWorldBeginPlay(UWorld& InWorld)
+{
+	Super::OnWorldBeginPlay(InWorld);
+	
+	if (const auto* Setting = Cast<AGridWorldSettings>(InWorld.GetWorldSettings()))
+	{
+		InitializeGrid(Setting->GridSize, Setting->GridMin, Setting->GridMax);
+	}
+}
+
 void USnakeGridSubsystem::InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax)
 {
 	GridSize = InGridSize;

@@ -19,6 +19,7 @@ void AGridBoardVisualizer::BeginPlay()
 	Super::BeginPlay();
 	
 	GridSubsystem = GetWorld()->GetSubsystem<USnakeGridSubsystem>();
+	DrawDebugGrid();
 }
 
 // Called every frame
@@ -32,47 +33,33 @@ void AGridBoardVisualizer::DrawDebugGrid() const
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
-
-	const float Z = 5.f;
-	const FColor Color = FColor::Green;
+	
 	const FIntPoint GridMin = GridSubsystem->GetGridMin();
 	const FIntPoint GridMax = GridSubsystem->GetGridMax();
 	const float GridSize = GridSubsystem->GetGridSize();
 	
-	// 画纵线（X 方向）
-	for (int32 X = GridMin.X; X <= GridMax.X + 1; ++X)
+	const float Half = GridSize * 0.5f;
+	const float ZOffset = 5.f;
+
+	for (int32 X = GridMin.X; X <= GridMax.X; ++X)
 	{
-		FVector Start(
-			X * GridSize,
-			GridMin.Y * GridSize,
-			Z
-		);
+		for (int32 Y = GridMin.Y; Y <= GridMax.Y; ++Y)
+		{
+			const FIntPoint Cell(X, Y);
+			const FVector Center =
+				GridSubsystem->GridToWorld(Cell) + FVector(0, 0, ZOffset);
 
-		FVector End(
-			X * GridSize,
-			(GridMax.Y + 1) * GridSize,
-			Z
-		);
-
-		DrawDebugLine(World, Start, End, Color, true, -1.f, 0, 2.f);
-	}
-
-	// 画横线（Y 方向）
-	for (int32 Y = GridMin.Y; Y <= GridMax.Y + 1; ++Y)
-	{
-		FVector Start(
-			GridMin.X * GridSize,
-			Y * GridSize,
-			Z
-		);
-
-		FVector End(
-			(GridMax.X + 1) * GridSize,
-			Y * GridSize,
-			Z
-		);
-
-		DrawDebugLine(World, Start, End, Color, true, -1.f, 0, 2.f);
+			DrawDebugBox(
+				World,
+				Center,
+				FVector(Half, Half, 2.f), // 薄盒子
+				FColor::Green,
+				true,   // Persistent
+				-1.f,   // Lifetime
+				0,
+				1.5f    // 线宽（屏幕空间）
+			);
+		}
 	}
 }
 

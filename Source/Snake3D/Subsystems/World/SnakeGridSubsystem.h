@@ -15,7 +15,7 @@ class SNAKE3D_API USnakeGridSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 	
 public:
-	void InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax);
+	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
 	FIntPoint WorldToGrid(const FVector& WorldPos) const;
 	FVector GridToWorld(const FIntPoint& GridPoint) const;
@@ -26,6 +26,8 @@ public:
 	FIntPoint GetGridMax() const { return GridMax; }
 	
 private:
+	void InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax);
+	
 	float GridSize = 100.f;
 	FIntPoint GridMin = -20;
 	FIntPoint GridMax = 20;
