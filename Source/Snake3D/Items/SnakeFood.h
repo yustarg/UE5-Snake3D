@@ -24,5 +24,5 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void ApplyTo(ASnake* Snake) override;
+	virtual ESnakeEffectType GetEffect() const override;
 };

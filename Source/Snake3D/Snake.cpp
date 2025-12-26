@@ -2,6 +2,7 @@
 
 #include "Snake.h"
 #include "SnakeSegment.h"
+#include "Effect/SnakeEffect.h"
 #include "Subsystems/World/SnakeGridSubsystem.h"
 
 // Sets default values
@@ -146,6 +147,22 @@ TArray<FIntPoint> ASnake::GetHeadAndBody() const
 	return Result;
 }
 
+void ASnake::ApplyEffect(const ESnakeEffectType Effect)
+{
+	switch (Effect)
+	{
+		case ESnakeEffectType::Grow:
+		Grow();
+		break;
+		case ESnakeEffectType::SpeedUp:
+		break;
+		case ESnakeEffectType::SpeedDown:
+		break;
+		default:
+		break;
+	}
+}
+
 void ASnake::Grow()
 {
 	bPendingGrow = true;
@@ -177,4 +194,3 @@ void ASnake::SpawnInitialSegments()
 		Segments.Add(BodySeg);
 	}
 }
-

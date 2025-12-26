@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Snake3D/Effect/SnakeEffect.h"
 #include "SnakeItem.generated.h"
 
 class ASnake;
@@ -23,5 +24,5 @@ protected:
 
 public:	
 	FIntPoint Grid;
-	virtual void ApplyTo(ASnake* Snake) PURE_VIRTUAL(ASnakeItem::ApplyTo, );
+	virtual ESnakeEffectType GetEffect() const PURE_VIRTUAL(ASnakeItem::GetEffect,  return ESnakeEffectType::None;);
 };

@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Snake.generated.h"
 
+enum class ESnakeEffectType : uint8;
 class USnakeGridSubsystem;
 
 UENUM(BlueprintType)
@@ -45,8 +46,7 @@ public:
 	const TArray<FIntPoint>& GetBody() const {return BodyGrids;}
 	TArray<FIntPoint> GetHeadAndBody() const;
 	
-	void Grow();
-	void ModifySpeed(float Multiplier, float Duration = 0.f);
+	void ApplyEffect(ESnakeEffectType Effect);
 	
 private:
 	UPROPERTY()
@@ -63,6 +63,9 @@ private:
 	TSubclassOf<AActor> SnakeSegmentClass;
 	
 	void SpawnInitialSegments();
+	
+	void Grow();
+	void ModifySpeed(float Multiplier, float Duration = 0.f);
 	
 	bool bPendingGrow = false;
 };

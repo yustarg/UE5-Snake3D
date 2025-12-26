@@ -27,9 +27,8 @@ void ASnakeFood::Tick(float DeltaTime)
 
 }
 
-void ASnakeFood::ApplyTo(ASnake* Snake)
+ESnakeEffectType ASnakeFood::GetEffect() const
 {
-	if (!Snake) return;
-	Snake->Grow();
+	return ESnakeEffectType::Grow;
 }
 
