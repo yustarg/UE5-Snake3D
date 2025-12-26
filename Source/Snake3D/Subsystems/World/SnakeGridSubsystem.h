@@ -19,16 +19,27 @@ public:
 	
 	FIntPoint WorldToGrid(const FVector& WorldPos) const;
 	FVector GridToWorld(const FIntPoint& GridPoint) const;
-	bool IsInside(const FIntPoint& Grid) const;
 
 	float GetGridSize() const { return GridSize; }
 	FIntPoint GetGridMin() const { return GridMin; }
 	FIntPoint GetGridMax() const { return GridMax; }
 	
+	void RebuildDynamicOccupied(const TArray<FIntPoint>& Cells);
+	bool IsInside(const FIntPoint& Cell) const;
+	bool IsStaticBlocked(const FIntPoint& Cell) const;
+	bool IsDynamicOccupied(const FIntPoint& Cell) const;
+	bool IsOccupied(const FIntPoint& Cell) const;
+	bool IsFreeCell(const FIntPoint& Cell) const;
+	FIntPoint GetRandomFreeCell() const;
+	
 private:
-	void InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax);
+	void InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax, FVector InGridOrigin);
 	
 	float GridSize = 100.f;
 	FIntPoint GridMin = -20;
 	FIntPoint GridMax = 20;
+	FVector GridOrigin = FVector::ZeroVector;
+	
+	TSet<FIntPoint> StaticBlocked;
+	TSet<FIntPoint> DynamicBlocked;
 };

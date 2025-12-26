@@ -43,6 +43,7 @@ public:
 	ESnakeDirection Direction = ESnakeDirection::Right;
 	const FIntPoint& GetHead() const {return HeadGrid;}
 	const TArray<FIntPoint>& GetBody() const {return BodyGrids;}
+	TArray<FIntPoint> GetHeadAndBody() const;
 	
 	void Grow();
 	void ModifySpeed(float Multiplier, float Duration = 0.f);

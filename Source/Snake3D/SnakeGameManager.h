@@ -47,7 +47,6 @@ public:
 private:
 	void SetGameState(ESnakeGameState NewState);
 	void SpawnFood();
-	bool IsGridOccupied(const FIntPoint& GridPoint) const;
 	
 	FTimerHandle MoveTimer;
 	

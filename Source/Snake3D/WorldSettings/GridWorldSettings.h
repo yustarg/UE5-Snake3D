@@ -28,4 +28,10 @@ public:
 	// 最大格子坐标
 	UPROPERTY(EditAnywhere, Category="Grid")
 	FIntPoint GridMax = FIntPoint(20, 20);
+	
+	UPROPERTY(EditAnywhere, Category="Grid")
+	FVector GridOrigin = FVector::ZeroVector;
+	
+	UPROPERTY(EditAnywhere, Category="Grid|Occupancy")
+	TArray<FIntPoint> StaticBlockedCells;
 };

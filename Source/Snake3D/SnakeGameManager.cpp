@@ -41,6 +41,8 @@ void ASnakeGameManager::StepMove()
 {
 	if (!PlayerSnake) return;
 	
+	GridSubsystem->RebuildDynamicOccupied(PlayerSnake->GetHeadAndBody());
+	
 	PlayerSnake->StepMove();
 	
 	if (!GridSubsystem->IsInside(PlayerSnake->GetHead()))
@@ -51,9 +53,9 @@ void ASnakeGameManager::StepMove()
 		return;
 	}
 	
-	if (PlayerSnake->GetBody().Contains(PlayerSnake->GetHead()))
+	if (GridSubsystem->IsOccupied(PlayerSnake->GetHead()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Game Over: Self"));
+		UE_LOG(LogTemp, Warning, TEXT("Game Over: Self or Obstacles"));
 		GetWorld()->GetTimerManager().ClearTimer(MoveTimer);
 		SetGameState(ESnakeGameState::GameOver);
 		return;
@@ -81,31 +83,7 @@ void ASnakeGameManager::SpawnFood()
 {
 	if (!FoodActorClass) return;
 	
-	TArray<FIntPoint> FreeGrids;
-
-	const FIntPoint GridMin = GridSubsystem->GetGridMin();
-	const FIntPoint GridMax = GridSubsystem->GetGridMax();
-	
-	for (int i = GridMin.X; i <= GridMax.X; ++i)
-	{
-		for (int j = GridMin.Y; j <= GridMax.Y; ++j)
-		{
-			FIntPoint GridPoint(i, j);
-			if (!IsGridOccupied(GridPoint))
-			{
-				FreeGrids.Add(GridPoint);
-			}
-		}
-	}
-	
-	if (FreeGrids.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No space left for food."));
-		return;
-	}
-	
-	const int RandomIndex = FMath::RandRange(0, FreeGrids.Num() - 1);
-	const FIntPoint FoodGrid = FreeGrids[RandomIndex];
+	FIntPoint FoodGrid = GridSubsystem->GetRandomFreeCell();
 	const FVector RandomPos = GridSubsystem->GridToWorld(FoodGrid);
 	
 	if (ItemFood)
@@ -118,13 +96,6 @@ void ASnakeGameManager::SpawnFood()
 	}
 	
 	ItemFood->Grid = FoodGrid;
-}
-
-bool ASnakeGameManager::IsGridOccupied(const FIntPoint& GridPoint) const
-{
-	if (GridPoint == PlayerSnake->GetHead()) return true;
-	
-	return PlayerSnake->GetBody().Contains(GridPoint);
 }
 
 void ASnakeGameManager::RestartGame()

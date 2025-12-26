@@ -135,6 +135,17 @@ void ASnake::Restart()
 	SpawnInitialSegments();
 }
 
+TArray<FIntPoint> ASnake::GetHeadAndBody() const
+{
+	TArray<FIntPoint> Result;
+	Result.Reserve(1 + BodyGrids.Num());
+
+	Result.Add(HeadGrid);
+	Result.Append(BodyGrids);
+
+	return Result;
+}
+
 void ASnake::Grow()
 {
 	bPendingGrow = true;
