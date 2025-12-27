@@ -29,8 +29,12 @@ public:
 	bool IsStaticBlocked(const FIntPoint& Cell) const;
 	bool IsDynamicOccupied(const FIntPoint& Cell) const;
 	bool IsOccupied(const FIntPoint& Cell) const;
-	bool IsFreeCell(const FIntPoint& Cell) const;
-	FIntPoint GetRandomFreeCell() const;
+	
+	void RegisterItemCell(const FIntPoint& Cell);
+	void UnregisterItemCell(const FIntPoint& Cell);
+	bool IsCellFreeForItem(const FIntPoint& Cell) const;
+	FIntPoint GetRandomFreeCellForItem() const;
+
 	
 private:
 	void InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax, FVector InGridOrigin);
@@ -42,4 +46,5 @@ private:
 	
 	TSet<FIntPoint> StaticBlocked;
 	TSet<FIntPoint> DynamicBlocked;
+	TSet<FIntPoint> ItemOccupied;
 };

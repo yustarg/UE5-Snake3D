@@ -3,8 +3,8 @@
 
 #include "SnakeGameManager.h"
 #include "Snake.h"
-#include "Items/SnakeFood.h"
 #include "Items/SnakeItem.h"
+#include "Items/SnakeItemSpawner.h"
 #include "Subsystems/World/SnakeGridSubsystem.h"
 
 // Sets default values
@@ -25,9 +25,9 @@ void ASnakeGameManager::BeginPlay()
 	PlayerSnake = GetWorld()->SpawnActor<ASnake>(PlayerSnakeClass);
 	PlayerSnake->Initialize();
 	
-	GetWorld()->GetTimerManager().SetTimer(MoveTimer, this, &ASnakeGameManager::StepMove, 0.25f, true);
+	StartStepTimer();
 	
-	SpawnFood();
+	ItemSpawner->SpawnFood();
 }
 
 // Called every frame
@@ -61,11 +61,13 @@ void ASnakeGameManager::StepMove()
 		return;
 	}
 
-	if (PlayerSnake->GetHead() == ItemFood->Grid)
+	if (PlayerSnake->GetHead() == ItemSpawner->CurrentFood->GetGrid())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Item class: %s"),  *ItemFood->GetClass()->GetName());
-		PlayerSnake->ApplyEffect(ItemFood->GetEffect());
-		SpawnFood();
+		if (PlayerSnake->ApplyEffect(ItemSpawner->CurrentFood->GetEffect()))
+		{
+			RestartStepTimerIfNeeded();
+		}
+		ItemSpawner->SpawnFood();
 	}
 	
 	PlayerSnake->SyncSegments();
@@ -79,35 +81,44 @@ void ASnakeGameManager::SetGameState(const ESnakeGameState NewState)
 	OnGameStateChanged.Broadcast(NewState);
 }
 
-void ASnakeGameManager::SpawnFood()
+void ASnakeGameManager::StartStepTimer()
 {
-	if (!FoodActorClass) return;
-	
-	FIntPoint FoodGrid = GridSubsystem->GetRandomFreeCell();
-	const FVector RandomPos = GridSubsystem->GridToWorld(FoodGrid);
-	
-	if (ItemFood)
-	{
-		ItemFood->SetActorLocation(RandomPos);
-	}
-	else
-	{
-		ItemFood = GetWorld()->SpawnActor<ASnakeFood>(FoodActorClass, RandomPos, FRotator::ZeroRotator);
-	}
-	
-	ItemFood->Grid = FoodGrid;
+	UWorld* World = GetWorld();
+	if (!World || !PlayerSnake) return;
+
+	const float Interval = PlayerSnake->GetMoveInterval();
+
+	World->GetTimerManager().SetTimer(
+		MoveTimer,
+		this,
+		&ASnakeGameManager::StepMove,
+		Interval,
+		true
+	);
+}
+
+void ASnakeGameManager::RestartStepTimerIfNeeded()
+{
+	UWorld* World = GetWorld();
+	if (!World || !PlayerSnake) return;
+
+	const float Interval = PlayerSnake->GetMoveInterval();
+
+	World->GetTimerManager().ClearTimer(MoveTimer);
+	World->GetTimerManager().SetTimer(
+		MoveTimer,
+		this,
+		&ASnakeGameManager::StepMove,
+		Interval,
+		true
+	);
 }
 
 void ASnakeGameManager::RestartGame()
 {
 	PlayerSnake->Restart();
-	if (ItemFood)
-	{
-		ItemFood->Destroy();
-		ItemFood = nullptr;
-	}
-	
-	SpawnFood();
+	ItemSpawner->RemoveItem(ItemSpawner->CurrentFood);
+	ItemSpawner->SpawnFood();
 	SetGameState(ESnakeGameState::Playing);
 	GetWorld()->GetTimerManager().SetTimer(MoveTimer, this,
 		&ASnakeGameManager::StepMove,

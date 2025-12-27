@@ -147,20 +147,26 @@ TArray<FIntPoint> ASnake::GetHeadAndBody() const
 	return Result;
 }
 
-void ASnake::ApplyEffect(const ESnakeEffectType Effect)
+bool ASnake::ApplyEffect(const ESnakeEffectType Effect)
 {
+	float OldInterval = MoveInterval;
+	
 	switch (Effect)
 	{
 		case ESnakeEffectType::Grow:
 		Grow();
 		break;
 		case ESnakeEffectType::SpeedUp:
+		ModifySpeed(1.5);
 		break;
 		case ESnakeEffectType::SpeedDown:
+		ModifySpeed(0.5);
 		break;
 		default:
 		break;
 	}
+	
+	return !FMath::IsNearlyEqual(OldInterval, MoveInterval);
 }
 
 void ASnake::Grow()
@@ -170,7 +176,7 @@ void ASnake::Grow()
 
 void ASnake::ModifySpeed(float Multiplier, float Duration)
 {
-	
+	MoveInterval = FMath::Clamp(MoveInterval * Multiplier, MinInterval, MaxInterval);
 }
 
 void ASnake::SpawnInitialSegments()

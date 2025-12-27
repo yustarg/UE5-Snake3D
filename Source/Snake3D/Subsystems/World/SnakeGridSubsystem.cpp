@@ -75,12 +75,7 @@ bool USnakeGridSubsystem::IsOccupied(const FIntPoint& Cell) const
 	return IsStaticBlocked(Cell) || IsDynamicOccupied(Cell);
 }
 
-bool USnakeGridSubsystem::IsFreeCell(const FIntPoint& Cell) const
-{
-	return IsInside(Cell) && !IsOccupied(Cell);
-}
-
-FIntPoint USnakeGridSubsystem::GetRandomFreeCell() const
+FIntPoint USnakeGridSubsystem::GetRandomFreeCellForItem() const
 {
 	TArray<FIntPoint> FreeCells;
 
@@ -89,7 +84,7 @@ FIntPoint USnakeGridSubsystem::GetRandomFreeCell() const
 		for (int j = GridMin.Y; j <= GridMax.Y; ++j)
 		{
 			FIntPoint GridPoint(i, j);
-			if (IsFreeCell(GridPoint))
+			if (IsCellFreeForItem(GridPoint))
 			{
 				FreeCells.Add(GridPoint);
 			}
@@ -100,4 +95,22 @@ FIntPoint USnakeGridSubsystem::GetRandomFreeCell() const
 	
 	const int RandomIndex = FMath::RandRange(0, FreeCells.Num() - 1);
 	return FreeCells[RandomIndex];
+}
+
+void USnakeGridSubsystem::RegisterItemCell(const FIntPoint& Cell)
+{
+	ItemOccupied.Add(Cell);
+}
+
+void USnakeGridSubsystem::UnregisterItemCell(const FIntPoint& Cell)
+{
+	ItemOccupied.Remove(Cell);
+}
+
+bool USnakeGridSubsystem::IsCellFreeForItem(const FIntPoint& Cell) const
+{
+	return IsInside(Cell)
+		&& !StaticBlocked.Contains(Cell)
+		&& !DynamicBlocked.Contains(Cell)
+		&& !ItemOccupied.Contains(Cell);
 }

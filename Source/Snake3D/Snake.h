@@ -46,7 +46,9 @@ public:
 	const TArray<FIntPoint>& GetBody() const {return BodyGrids;}
 	TArray<FIntPoint> GetHeadAndBody() const;
 	
-	void ApplyEffect(ESnakeEffectType Effect);
+	// Effect Related
+	bool ApplyEffect(ESnakeEffectType Effect);
+	float GetMoveInterval() const { return MoveInterval; }
 	
 private:
 	UPROPERTY()
@@ -68,4 +70,7 @@ private:
 	void ModifySpeed(float Multiplier, float Duration = 0.f);
 	
 	bool bPendingGrow = false;
+	float MoveInterval = 0.25f;
+	float MinInterval = 0.05f;
+	float MaxInterval = 0.5f;
 };

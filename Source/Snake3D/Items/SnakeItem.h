@@ -21,8 +21,18 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
+	FIntPoint Grid;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Item")
+	ESnakeEffectType Effect;
 
 public:	
-	FIntPoint Grid;
-	virtual ESnakeEffectType GetEffect() const PURE_VIRTUAL(ASnakeItem::GetEffect,  return ESnakeEffectType::None;);
+	ESnakeEffectType GetEffect() const { return Effect; }
+	void SetGrid(const FIntPoint& InGrid);
+	FIntPoint GetGrid() const { return Grid; }
+	
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UStaticMeshComponent> StaticMesh;
 };

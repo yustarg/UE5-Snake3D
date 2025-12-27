@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "SnakeGameManager.generated.h"
 
+class ASnakeItemSpawner;
 class USnakeGridSubsystem;
 class ASnakeItem;
 class ASnake;
@@ -46,19 +47,17 @@ public:
 
 private:
 	void SetGameState(ESnakeGameState NewState);
-	void SpawnFood();
 	
 	FTimerHandle MoveTimer;
+	void StartStepTimer();
+	void RestartStepTimerIfNeeded();
 	
 	UPROPERTY(EditDefaultsOnly, Category="Snake")
 	TSubclassOf<ASnake> PlayerSnakeClass;
 	
 	UPROPERTY()
-	TObjectPtr<ASnakeItem> ItemFood;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Food");
-	TSubclassOf<ASnakeItem> FoodActorClass;
-	
-	UPROPERTY()
 	USnakeGridSubsystem* GridSubsystem;
+	
+	UPROPERTY(EditInstanceOnly, Category="Item")
+	TObjectPtr<ASnakeItemSpawner> ItemSpawner;
 };
