@@ -27,6 +27,7 @@ void ASnakeGameManager::BeginPlay()
 	
 	StartStepTimer();
 	
+	ItemSpawner->Initialize();
 	ItemSpawner->SpawnFood();
 }
 

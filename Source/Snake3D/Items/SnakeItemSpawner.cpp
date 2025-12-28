@@ -3,6 +3,7 @@
 
 #include "SnakeItemSpawner.h"
 
+#include "ItemFood.h"
 #include "SnakeItem.h"
 #include "Snake3D/Subsystems/World/SnakeGridSubsystem.h"
 
@@ -19,10 +20,7 @@ void ASnakeItemSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (const UWorld* World = GetWorld())
-	{
-		GridSystem = World->GetSubsystem<USnakeGridSubsystem>();
-	}
+	Initialize();
 }
 
 // Called every frame
@@ -30,6 +28,17 @@ void ASnakeItemSpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ASnakeItemSpawner::Initialize()
+{
+	if (bIsInitialized) return;
+	
+	if (const UWorld* World = GetWorld())
+	{
+		GridSystem = World->GetSubsystem<USnakeGridSubsystem>();
+	}
+	bIsInitialized = true;
 }
 
 void ASnakeItemSpawner::SpawnFood()
@@ -40,8 +49,8 @@ void ASnakeItemSpawner::SpawnFood()
 	}
 
 	const FIntPoint Cell = GridSystem->GetRandomFreeCellForItem();
-
-	CurrentFood = GetWorld()->SpawnActor<ASnakeItem>(FoodClass);
+	
+	CurrentFood = GetWorld()->SpawnActor<AItemFood>(FoodClass);
 	CurrentFood->SetGrid(Cell);
 	GridSystem->RegisterItemCell(Cell);
 }

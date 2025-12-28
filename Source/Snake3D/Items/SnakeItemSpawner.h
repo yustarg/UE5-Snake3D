@@ -32,6 +32,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
+	void Initialize();
 	void SpawnFood();
 	void RemoveItem(ASnakeItem* Item);
 	
@@ -41,4 +42,6 @@ public:
 private:
 	UPROPERTY()
 	USnakeGridSubsystem* GridSystem;
+	
+	bool bIsInitialized = false;
 };

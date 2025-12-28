@@ -11,6 +11,12 @@ void USnakeGridSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	
 	if (const auto* Setting = Cast<AGridWorldSettings>(InWorld.GetWorldSettings()))
 	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("GridMin: %s, GridMax: %s"),
+			*Setting->GridMin.ToString(),
+			*Setting->GridMax.ToString()
+		);
+
 		InitializeGrid(Setting->GridSize, Setting->GridMin, Setting->GridMax, Setting->GridOrigin);
 		
 		StaticBlocked.Empty();
@@ -21,10 +27,13 @@ void USnakeGridSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 				StaticBlocked.Add(Cell);
 			}
 		}
+		ItemOccupied.Empty();
+		DynamicBlocked.Empty();
 	}
 }
 
-void USnakeGridSubsystem::InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax, FVector InGridOrigin)
+void USnakeGridSubsystem::InitializeGrid(const int32 InGridSize, const FIntPoint InMin, 
+	const FIntPoint InMax, const FVector& InGridOrigin)
 {
 	GridSize = InGridSize;
 	GridMin = InMin;

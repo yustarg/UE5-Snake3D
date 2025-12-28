@@ -26,8 +26,11 @@ public:
 	
 	void RebuildDynamicOccupied(const TArray<FIntPoint>& Cells);
 	bool IsInside(const FIntPoint& Cell) const;
+	// check if this cell is Occupied by obstacles
 	bool IsStaticBlocked(const FIntPoint& Cell) const;
+	// check if this cell is Occupied by snakes
 	bool IsDynamicOccupied(const FIntPoint& Cell) const;
+	// check if this cell is Occupied by snakes or obstacles
 	bool IsOccupied(const FIntPoint& Cell) const;
 	
 	void RegisterItemCell(const FIntPoint& Cell);
@@ -37,7 +40,7 @@ public:
 
 	
 private:
-	void InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax, FVector InGridOrigin);
+	void InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax, const FVector& InGridOrigin);
 	
 	float GridSize = 100.f;
 	FIntPoint GridMin = -20;
