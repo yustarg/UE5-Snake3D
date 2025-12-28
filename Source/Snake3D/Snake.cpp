@@ -2,6 +2,7 @@
 
 #include "Snake.h"
 #include "SnakeSegment.h"
+#include "Buff/SnakeBuff.h"
 #include "Effect/SnakeEffect.h"
 #include "Subsystems/World/SnakeGridSubsystem.h"
 
@@ -147,36 +148,50 @@ TArray<FIntPoint> ASnake::GetHeadAndBody() const
 	return Result;
 }
 
-bool ASnake::ApplyEffect(const ESnakeEffectType Effect)
+void ASnake::ApplyEffect(const ESnakeEffectType Effect)
 {
-	float OldInterval = MoveInterval;
-	
 	switch (Effect)
 	{
 		case ESnakeEffectType::Grow:
 		Grow();
 		break;
-		case ESnakeEffectType::SpeedUp:
-		ModifySpeed(1.5);
-		break;
-		case ESnakeEffectType::SpeedDown:
-		ModifySpeed(0.5);
-		break;
 		default:
 		break;
 	}
+}
+
+void ASnake::AddBuff(TSubclassOf<USnakeBuff> BuffClass)
+{
+	if (!BuffClass) return;
 	
-	return !FMath::IsNearlyEqual(OldInterval, MoveInterval);
+	USnakeBuff* Buff = NewObject<USnakeBuff>(this, BuffClass);
+	Buff->Initialize(this);
+	ActiveBuffs.Add(Buff);
+}
+
+void ASnake::TickBuffs(float DeltaTime)
+{
+	for (int i = ActiveBuffs.Num() - 1; i >= 0; --i)
+	{
+		ActiveBuffs[i]->Tick(DeltaTime);
+		if (ActiveBuffs[i]->IsExpired())
+		{
+			ActiveBuffs.RemoveAt(i);
+		}
+	}
+}
+
+void ASnake::SetMoveInterval(float NewMoveInterval)
+{
+	if (FMath::IsNearlyEqual(NewMoveInterval, MoveInterval)) return;
+	
+	MoveInterval = FMath::Clamp(NewMoveInterval, MinInterval, MaxInterval);
+	OnSpeedChanged.Broadcast();
 }
 
 void ASnake::Grow()
 {
 	bPendingGrow = true;
-}
-
-void ASnake::ModifySpeed(float Multiplier, float Duration)
-{
-	MoveInterval = FMath::Clamp(MoveInterval * Multiplier, MinInterval, MaxInterval);
 }
 
 void ASnake::SpawnInitialSegments()

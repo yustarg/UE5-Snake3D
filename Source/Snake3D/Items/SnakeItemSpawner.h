@@ -9,6 +9,19 @@
 class USnakeGridSubsystem;
 class ASnakeItem;
 
+USTRUCT(BlueprintType)
+struct FItemSpawnEntry
+{
+	GENERATED_BODY();
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ASnakeItem> ItemClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	float Weight = 1.f;	
+};
+
+
 UCLASS()
 class SNAKE3D_API ASnakeItemSpawner : public AActor
 {
@@ -21,27 +34,26 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Item")
-	TSubclassOf<ASnakeItem> FoodClass;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Item")
-	TSubclassOf<ASnakeItem> SpeedUpClass;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
 	void Initialize();
-	void SpawnFood();
+	void SpawnRandomItem();
 	void RemoveItem(ASnakeItem* Item);
 	
 	UPROPERTY()
-	TObjectPtr<ASnakeItem> CurrentFood;
+	TObjectPtr<ASnakeItem> CurrentItem;
 	
 private:
 	UPROPERTY()
 	USnakeGridSubsystem* GridSystem;
 	
+	UPROPERTY(EditDefaultsOnly, Category="Item")
+	TArray<FItemSpawnEntry> ItemPool;
+	
 	bool bIsInitialized = false;
+	
+	TSubclassOf<ASnakeItem> PickRandomItemClass() const;
 };

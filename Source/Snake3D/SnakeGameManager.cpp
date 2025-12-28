@@ -24,11 +24,15 @@ void ASnakeGameManager::BeginPlay()
 	
 	PlayerSnake = GetWorld()->SpawnActor<ASnake>(PlayerSnakeClass);
 	PlayerSnake->Initialize();
+	PlayerSnake->OnSpeedChanged.AddUObject(
+	   this,
+	   &ASnakeGameManager::RestartStepTimerIfNeeded
+   );
 	
 	StartStepTimer();
 	
 	ItemSpawner->Initialize();
-	ItemSpawner->SpawnFood();
+	ItemSpawner->SpawnRandomItem();
 }
 
 // Called every frame
@@ -45,6 +49,7 @@ void ASnakeGameManager::StepMove()
 	GridSubsystem->RebuildDynamicOccupied(PlayerSnake->GetHeadAndBody());
 	
 	PlayerSnake->StepMove();
+	PlayerSnake->TickBuffs(PlayerSnake->GetMoveInterval());
 	
 	if (!GridSubsystem->IsInside(PlayerSnake->GetHead()))
 	{
@@ -62,13 +67,18 @@ void ASnakeGameManager::StepMove()
 		return;
 	}
 
-	if (PlayerSnake->GetHead() == ItemSpawner->CurrentFood->GetGrid())
+	if (PlayerSnake->GetHead() == ItemSpawner->CurrentItem->GetGrid())
 	{
-		if (PlayerSnake->ApplyEffect(ItemSpawner->CurrentFood->GetEffect()))
+		if (ItemSpawner->CurrentItem->IsBuff())
 		{
-			RestartStepTimerIfNeeded();
+			PlayerSnake->AddBuff(ItemSpawner->CurrentItem->GetBuffClass());
 		}
-		ItemSpawner->SpawnFood();
+		else
+		{
+			PlayerSnake->ApplyEffect(ItemSpawner->CurrentItem->GetEffect());
+		}
+		
+		ItemSpawner->SpawnRandomItem();
 	}
 	
 	PlayerSnake->SyncSegments();
@@ -100,7 +110,7 @@ void ASnakeGameManager::StartStepTimer()
 
 void ASnakeGameManager::RestartStepTimerIfNeeded()
 {
-	UWorld* World = GetWorld();
+	const UWorld* World = GetWorld();
 	if (!World || !PlayerSnake) return;
 
 	const float Interval = PlayerSnake->GetMoveInterval();
@@ -118,8 +128,8 @@ void ASnakeGameManager::RestartStepTimerIfNeeded()
 void ASnakeGameManager::RestartGame()
 {
 	PlayerSnake->Restart();
-	ItemSpawner->RemoveItem(ItemSpawner->CurrentFood);
-	ItemSpawner->SpawnFood();
+	ItemSpawner->RemoveItem(ItemSpawner->CurrentItem);
+	ItemSpawner->SpawnRandomItem();
 	SetGameState(ESnakeGameState::Playing);
 	GetWorld()->GetTimerManager().SetTimer(MoveTimer, this,
 		&ASnakeGameManager::StepMove,

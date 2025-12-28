@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Snake.generated.h"
 
+class USnakeBuff;
 enum class ESnakeEffectType : uint8;
 class USnakeGridSubsystem;
 
@@ -17,6 +18,8 @@ enum class ESnakeDirection : uint8
 	Left,
 	Right
 };
+
+DECLARE_MULTICAST_DELEGATE(FOnSnakeSpeedChanged);
 
 UCLASS()
 class SNAKE3D_API ASnake : public AActor
@@ -32,6 +35,8 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	FOnSnakeSpeedChanged OnSpeedChanged;
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
@@ -46,9 +51,14 @@ public:
 	const TArray<FIntPoint>& GetBody() const {return BodyGrids;}
 	TArray<FIntPoint> GetHeadAndBody() const;
 	
-	// Effect Related
-	bool ApplyEffect(ESnakeEffectType Effect);
+	// Effect & Buff Related
+	void ApplyEffect(ESnakeEffectType Effect);
+	
+	void AddBuff(TSubclassOf<USnakeBuff> BuffClass);
+	void TickBuffs(float DeltaTime);
+	
 	float GetMoveInterval() const { return MoveInterval; }
+	void SetMoveInterval(float NewMoveInterval);
 	
 private:
 	UPROPERTY()
@@ -67,7 +77,9 @@ private:
 	void SpawnInitialSegments();
 	
 	void Grow();
-	void ModifySpeed(float Multiplier, float Duration = 0.f);
+	
+	UPROPERTY()
+	TArray<TObjectPtr<USnakeBuff>> ActiveBuffs;
 	
 	bool bPendingGrow = false;
 	float MoveInterval = 0.25f;

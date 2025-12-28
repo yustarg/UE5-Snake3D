@@ -2,8 +2,6 @@
 
 
 #include "SnakeItemSpawner.h"
-
-#include "ItemFood.h"
 #include "SnakeItem.h"
 #include "Snake3D/Subsystems/World/SnakeGridSubsystem.h"
 
@@ -41,17 +39,20 @@ void ASnakeItemSpawner::Initialize()
 	bIsInitialized = true;
 }
 
-void ASnakeItemSpawner::SpawnFood()
+void ASnakeItemSpawner::SpawnRandomItem()
 {
-	if (CurrentFood)
+	if (CurrentItem)
 	{
-		RemoveItem(CurrentFood);
+		RemoveItem(CurrentItem);
 	}
 
+	const TSubclassOf<ASnakeItem> ItemClass = PickRandomItemClass();
+	if (!ItemClass) return;
+
 	const FIntPoint Cell = GridSystem->GetRandomFreeCellForItem();
-	
-	CurrentFood = GetWorld()->SpawnActor<AItemFood>(FoodClass);
-	CurrentFood->SetGrid(Cell);
+
+	CurrentItem = GetWorld()->SpawnActor<ASnakeItem>(ItemClass);
+	CurrentItem->SetGrid(Cell);
 	GridSystem->RegisterItemCell(Cell);
 }
 
@@ -61,9 +62,31 @@ void ASnakeItemSpawner::RemoveItem(ASnakeItem* Item)
 
 	GridSystem->UnregisterItemCell(Item->GetGrid());
 	Item->Destroy();
-	if (Item == CurrentFood)
+	if (Item == CurrentItem)
 	{
-		CurrentFood = nullptr;
+		CurrentItem = nullptr;
 	}
+}
+
+TSubclassOf<ASnakeItem> ASnakeItemSpawner::PickRandomItemClass() const
+{
+	float TotalWeight = 0.f;
+	for (const auto& Entry : ItemPool)
+	{
+		TotalWeight += Entry.Weight;
+	}
+
+	float R = FMath::FRandRange(0.f, TotalWeight);
+
+	for (const auto& Entry : ItemPool)
+	{
+		R -= Entry.Weight;
+		if (R <= 0.f)
+		{
+			return Entry.ItemClass;
+		}
+	}
+
+	return nullptr;
 }
 
