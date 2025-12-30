@@ -49,7 +49,7 @@ void ASnakeItemSpawner::SpawnRandomItem()
 	const TSubclassOf<ASnakeItem> ItemClass = PickRandomItemClass();
 	if (!ItemClass) return;
 
-	const FIntPoint Cell = GridSystem->GetRandomFreeCellForItem();
+	const FIntPoint Cell = GridSystem->GetRandomFreeCell();
 
 	CurrentItem = GetWorld()->SpawnActor<ASnakeItem>(ItemClass);
 	CurrentItem->SetGrid(Cell);

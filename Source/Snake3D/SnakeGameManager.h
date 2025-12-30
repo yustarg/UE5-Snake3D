@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "SnakeGameManager.generated.h"
 
+class IGameRule;
+class ASnakeAIController;
 class ASnakeItemSpawner;
 class USnakeGridSubsystem;
 class ASnakeItem;
@@ -17,6 +19,8 @@ enum class ESnakeGameState : uint8
 	Playing,
 	GameOver
 };
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStateChanged, ESnakeGameState)
 
 UCLASS()
 class SNAKE3D_API ASnakeGameManager : public AActor
@@ -36,28 +40,47 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void StepMove();
 	void RestartGame();
+	void RegisterSnake(ASnake* InSnake);
+	USnakeGridSubsystem* GetGridSubsystem() const { return GridSubsystem; }
 	
-	DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStateChanged, ESnakeGameState)
 	FOnGameStateChanged OnGameStateChanged;
-	
-	UPROPERTY()
-	TObjectPtr<ASnake> PlayerSnake;
 	
 	ESnakeGameState GameState = ESnakeGameState::Playing;
 
 private:
 	void SetGameState(ESnakeGameState NewState);
 	
+	const float GlobalStepInterval = 0.05f;
 	FTimerHandle MoveTimer;
 	void StartStepTimer();
-	void RestartStepTimerIfNeeded();
+	
+	void SpawnPlayerSnake();
+	void SpawnAISnakes();
+	void OnSnakeDied(ASnake* Snake);
+	void TriggerGameOver();
+	bool bGameOver = false;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Snake")
 	TSubclassOf<ASnake> PlayerSnakeClass;
+	UPROPERTY()
+	TObjectPtr<ASnake> PlayerSnake;
+	
+	UPROPERTY(editDefaultsOnly, Category="Snake")
+	TSubclassOf<ASnakeAIController> AIControllerClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Snake")
+	int32 NumAI = 0;
+	
+	UPROPERTY()
+	TArray<TObjectPtr<ASnake>> Snakes;
 	
 	UPROPERTY()
 	USnakeGridSubsystem* GridSubsystem;
 	
 	UPROPERTY(EditInstanceOnly, Category="Item")
 	TObjectPtr<ASnakeItemSpawner> ItemSpawner;
+	
+	UPROPERTY()
+	TArray<TScriptInterface<IGameRule>> ActiveRules;
+	
 };

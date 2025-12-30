@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Snake.generated.h"
 
+class ISnakeDirectionProvider;
+class ASnake;
 class USnakeBuff;
 enum class ESnakeEffectType : uint8;
 class USnakeGridSubsystem;
@@ -20,6 +22,7 @@ enum class ESnakeDirection : uint8
 };
 
 DECLARE_MULTICAST_DELEGATE(FOnSnakeSpeedChanged);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSnakeDied, ASnake*);
 
 UCLASS()
 class SNAKE3D_API ASnake : public AActor
@@ -29,60 +32,80 @@ class SNAKE3D_API ASnake : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ASnake();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	FOnSnakeSpeedChanged OnSpeedChanged;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
-	void Initialize();
-	void SetDirection(ESnakeDirection NewDirection);
-	void StepMove();
-	void SyncSegments();
-	void Restart();
+	
+	/* ===== 生命周期 ===== */
+	void Initialize(FIntPoint InHeadGrid);
+	bool IsAlive() const { return bAlive; }
+	void Die();
+	void Restart(FIntPoint InHeadGrid);
+	FOnSnakeDied OnDied;
+	
+	/* ===== Step 驱动 ===== */
+	void TickLogic(float DeltaTime);
+	bool IsMovingThisStep() const { return bMoveThisStep; }
+	FOnSnakeSpeedChanged OnSpeedChanged;
 
-	ESnakeDirection Direction = ESnakeDirection::Right;
+	/* ===== 移动 ===== */
+	void ComputeNextHead();
+	void ApplyMoveWithTarget(const FIntPoint& Target);
+	void ApplyMove();
+	float GetMoveInterval() const { return MoveInterval; }
+	void SetMoveInterval(float NewMoveInterval);
+	void SyncSegments();
+
+	/* ===== 方向 ===== */
+	FIntPoint Direction = {1, 0};
+	void SetDirectionProvider(const TScriptInterface<ISnakeDirectionProvider>& InProvider);
+	
+	/* ===== Grid 数据 ===== */
 	const FIntPoint& GetHead() const {return HeadGrid;}
+	const FIntPoint& GetNextHeadGrid() const {return NextHeadGrid;}
 	const TArray<FIntPoint>& GetBody() const {return BodyGrids;}
 	TArray<FIntPoint> GetHeadAndBody() const;
 	
 	// Effect & Buff Related
 	void ApplyEffect(ESnakeEffectType Effect);
-	
 	void AddBuff(TSubclassOf<USnakeBuff> BuffClass);
 	void TickBuffs(float DeltaTime);
-	
-	float GetMoveInterval() const { return MoveInterval; }
-	void SetMoveInterval(float NewMoveInterval);
-	
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
 private:
+	/* ===== 状态 ===== */
+	bool bAlive = true;
+	
+	/* ===== 移动节奏 ===== */
+	TScriptInterface<ISnakeDirectionProvider> DirectionProvider;
+	float MoveInterval = 0.25f;
+	float MoveAccumulator = 0.f;
+	float MinInterval = 0.01f;
+	float MaxInterval = 1.f;
+	bool  bMoveThisStep = false;
+	
+	/* ===== Grid ===== */
 	UPROPERTY()
 	USnakeGridSubsystem* GridSubsystem;
-	
 	FIntPoint HeadGrid;
-	FIntPoint PrevHeadGrid;
+	FIntPoint NextHeadGrid;
 	TArray<FIntPoint> BodyGrids;
 	
+	/* ===== Visual ===== */
 	UPROPERTY()
 	TArray<TObjectPtr<AActor>> Segments;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Snake")
 	TSubclassOf<AActor> SnakeSegmentClass;
-	
 	void SpawnInitialSegments();
-	
 	void Grow();
+	bool bPendingGrow = false;
 	
+	/* ===== Buff ===== */
 	UPROPERTY()
 	TArray<TObjectPtr<USnakeBuff>> ActiveBuffs;
-	
-	bool bPendingGrow = false;
-	float MoveInterval = 0.25f;
-	float MinInterval = 0.05f;
-	float MaxInterval = 0.5f;
 };

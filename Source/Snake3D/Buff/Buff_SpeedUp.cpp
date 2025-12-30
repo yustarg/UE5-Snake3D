@@ -7,7 +7,7 @@
 void UBuff_SpeedUp::OnApply()
 {
 	OldMoveInterval = Owner->GetMoveInterval();
-	Owner->SetMoveInterval(OldMoveInterval * 0.8f);
+	Owner->SetMoveInterval(OldMoveInterval * 0.5f);
 }
 
 void UBuff_SpeedUp::OnExpire()

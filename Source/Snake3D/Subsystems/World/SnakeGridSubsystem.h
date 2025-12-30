@@ -24,7 +24,8 @@ public:
 	FIntPoint GetGridMin() const { return GridMin; }
 	FIntPoint GetGridMax() const { return GridMax; }
 	
-	void RebuildDynamicOccupied(const TArray<FIntPoint>& Cells);
+	void RebuildDynamicOccupied();
+	void UpdateDynamicOccupied(const TArray<FIntPoint>& Cells);
 	bool IsInside(const FIntPoint& Cell) const;
 	// check if this cell is Occupied by obstacles
 	bool IsStaticBlocked(const FIntPoint& Cell) const;
@@ -36,8 +37,9 @@ public:
 	void RegisterItemCell(const FIntPoint& Cell);
 	void UnregisterItemCell(const FIntPoint& Cell);
 	bool IsCellFreeForItem(const FIntPoint& Cell) const;
-	FIntPoint GetRandomFreeCellForItem() const;
+	FIntPoint GetRandomFreeCell() const;
 
+	void Clear();
 	
 private:
 	void InitializeGrid(int32 InGridSize, FIntPoint InMin, FIntPoint InMax, const FVector& InGridOrigin);

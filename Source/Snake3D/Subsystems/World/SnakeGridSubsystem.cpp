@@ -53,10 +53,13 @@ FVector USnakeGridSubsystem::GridToWorld(const FIntPoint& GridPoint) const
 	return GridOrigin + FVector(GridPoint.X * GridSize, GridPoint.Y * GridSize, 0);
 }
 
-void USnakeGridSubsystem::RebuildDynamicOccupied(const TArray<FIntPoint>& Cells)
+void USnakeGridSubsystem::RebuildDynamicOccupied()
 {
 	DynamicBlocked.Empty();
-	
+}
+
+void USnakeGridSubsystem::UpdateDynamicOccupied(const TArray<FIntPoint>& Cells)
+{
 	for (auto Cell : Cells)
 	{
 		DynamicBlocked.Add(Cell);
@@ -84,7 +87,7 @@ bool USnakeGridSubsystem::IsOccupied(const FIntPoint& Cell) const
 	return IsStaticBlocked(Cell) || IsDynamicOccupied(Cell);
 }
 
-FIntPoint USnakeGridSubsystem::GetRandomFreeCellForItem() const
+FIntPoint USnakeGridSubsystem::GetRandomFreeCell() const
 {
 	TArray<FIntPoint> FreeCells;
 
@@ -104,6 +107,13 @@ FIntPoint USnakeGridSubsystem::GetRandomFreeCellForItem() const
 	
 	const int RandomIndex = FMath::RandRange(0, FreeCells.Num() - 1);
 	return FreeCells[RandomIndex];
+}
+
+void USnakeGridSubsystem::Clear()
+{
+	StaticBlocked.Empty();
+	DynamicBlocked.Empty();
+	ItemOccupied.Empty();
 }
 
 void USnakeGridSubsystem::RegisterItemCell(const FIntPoint& Cell)

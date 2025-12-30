@@ -3,8 +3,11 @@
 
 #include "SnakeGameManager.h"
 #include "Snake.h"
+#include "SnakeAIController.h"
+#include "Interface/GameRule.h"
 #include "Items/SnakeItem.h"
 #include "Items/SnakeItemSpawner.h"
+#include "Rules/WallWrapRule.h"
 #include "Subsystems/World/SnakeGridSubsystem.h"
 
 // Sets default values
@@ -22,17 +25,15 @@ void ASnakeGameManager::BeginPlay()
 	
 	GridSubsystem = GetWorld()->GetSubsystem<USnakeGridSubsystem>();
 	
-	PlayerSnake = GetWorld()->SpawnActor<ASnake>(PlayerSnakeClass);
-	PlayerSnake->Initialize();
-	PlayerSnake->OnSpeedChanged.AddUObject(
-	   this,
-	   &ASnakeGameManager::RestartStepTimerIfNeeded
-   );
-	
+	SpawnPlayerSnake();
+	SpawnAISnakes();
 	StartStepTimer();
 	
 	ItemSpawner->Initialize();
 	ItemSpawner->SpawnRandomItem();
+	
+	UWallWrapRule* WrapRule = NewObject<UWallWrapRule>(this);
+	ActiveRules.Add(WrapRule);
 }
 
 // Called every frame
@@ -44,27 +45,76 @@ void ASnakeGameManager::Tick(float DeltaTime)
 
 void ASnakeGameManager::StepMove()
 {
-	if (!PlayerSnake) return;
-	
-	GridSubsystem->RebuildDynamicOccupied(PlayerSnake->GetHeadAndBody());
-	
-	PlayerSnake->StepMove();
-	PlayerSnake->TickBuffs(PlayerSnake->GetMoveInterval());
-	
-	if (!GridSubsystem->IsInside(PlayerSnake->GetHead()))
+	if (bGameOver) return;
+
+	const float Delta = GlobalStepInterval;
+
+	// ① Buff 时间
+	for (ASnake* Snake : Snakes)
+		Snake->TickBuffs(Delta);
+
+	// ② 节拍判断
+	for (ASnake* Snake : Snakes)
+		Snake->TickLogic(Delta);
+
+	// ③ PreStep：规则可修改行为
+	for (ASnake* Snake : Snakes)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Game Over: Wall"));
-		GetWorld()->GetTimerManager().ClearTimer(MoveTimer);
-		SetGameState(ESnakeGameState::GameOver);
-		return;
+		if (!Snake->IsAlive() || !Snake->IsMovingThisStep())
+			continue;
+
+		for (const auto& Rule : ActiveRules)
+		{
+			Rule->PreStep(this, Snake);
+		}
 	}
-	
-	if (GridSubsystem->IsOccupied(PlayerSnake->GetHead()))
+
+	// ④ 计算 NextHead
+	for (ASnake* Snake : Snakes)
+		Snake->ComputeNextHead();
+
+	// ⑤ Occupancy
+	GridSubsystem->RebuildDynamicOccupied();
+	for (const ASnake* Snake : Snakes)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Game Over: Self or Obstacles"));
-		GetWorld()->GetTimerManager().ClearTimer(MoveTimer);
-		SetGameState(ESnakeGameState::GameOver);
-		return;
+		GridSubsystem->UpdateDynamicOccupied(Snake->GetHeadAndBody());
+	}
+
+	// ⑥ 判定 CanMove
+	for (ASnake* Snake : Snakes)
+	{
+		if (!Snake->IsAlive() || !Snake->IsMovingThisStep())
+			continue;
+
+		FIntPoint Target = Snake->GetNextHeadGrid();
+		bool bAllowed = true;
+
+		for (const auto& Rule : ActiveRules)
+		{
+			if (!Rule->ModifyTarget(this, Snake, Target))
+			{
+				bAllowed = false;
+				break;
+			}
+		}
+
+		if (!bAllowed ||
+			!GridSubsystem->IsInside(Snake->GetNextHeadGrid()) ||
+			GridSubsystem->IsDynamicOccupied(Snake->GetNextHeadGrid()))
+		{
+			Snake->Die();
+		}
+		else
+		{
+			Snake->ApplyMoveWithTarget(Target);
+
+			for (const auto& Rule : ActiveRules)
+			{
+				Rule->PostMove(this, Snake);
+			}
+			
+			Snake->SyncSegments();
+		}
 	}
 
 	if (PlayerSnake->GetHead() == ItemSpawner->CurrentItem->GetGrid())
@@ -80,8 +130,6 @@ void ASnakeGameManager::StepMove()
 		
 		ItemSpawner->SpawnRandomItem();
 	}
-	
-	PlayerSnake->SyncSegments();
 }
 
 void ASnakeGameManager::SetGameState(const ESnakeGameState NewState)
@@ -95,45 +143,91 @@ void ASnakeGameManager::SetGameState(const ESnakeGameState NewState)
 void ASnakeGameManager::StartStepTimer()
 {
 	UWorld* World = GetWorld();
-	if (!World || !PlayerSnake) return;
-
-	const float Interval = PlayerSnake->GetMoveInterval();
+	if (!World) return;
 
 	World->GetTimerManager().SetTimer(
 		MoveTimer,
 		this,
 		&ASnakeGameManager::StepMove,
-		Interval,
+		GlobalStepInterval,
 		true
 	);
 }
 
-void ASnakeGameManager::RestartStepTimerIfNeeded()
+void ASnakeGameManager::SpawnPlayerSnake()
 {
-	const UWorld* World = GetWorld();
-	if (!World || !PlayerSnake) return;
+	const FIntPoint BirthPoint = GridSubsystem->GetRandomFreeCell();
+	GridSubsystem->UpdateDynamicOccupied({BirthPoint});
+	PlayerSnake = GetWorld()->SpawnActor<ASnake>(PlayerSnakeClass);
+	PlayerSnake->Initialize(BirthPoint);
+	
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	PlayerSnake->SetDirectionProvider(PC);
+	
+	RegisterSnake(PlayerSnake);
+}
 
-	const float Interval = PlayerSnake->GetMoveInterval();
-
-	World->GetTimerManager().ClearTimer(MoveTimer);
-	World->GetTimerManager().SetTimer(
-		MoveTimer,
-		this,
-		&ASnakeGameManager::StepMove,
-		Interval,
-		true
-	);
+void ASnakeGameManager::SpawnAISnakes()
+{
+	for (int32 i = 0; i < NumAI; ++i)
+	{
+		ASnake* Snake = GetWorld()->SpawnActor<ASnake>(PlayerSnakeClass);
+		AActor* AIProvider = GetWorld()->SpawnActor<AActor>(AIControllerClass);
+		
+		const FIntPoint BirthPoint = GridSubsystem->GetRandomFreeCell();
+		GridSubsystem->UpdateDynamicOccupied({BirthPoint});
+		Snake->Initialize(BirthPoint);
+		Snake->SetDirectionProvider(AIProvider);
+		RegisterSnake(Snake);
+	}
 }
 
 void ASnakeGameManager::RestartGame()
 {
-	PlayerSnake->Restart();
+	GridSubsystem->Clear();
+	for (auto Snake : Snakes)
+	{
+		const FIntPoint BirthPoint = GridSubsystem->GetRandomFreeCell();
+		GridSubsystem->UpdateDynamicOccupied({BirthPoint});
+		Snake->Restart(BirthPoint);
+	}
+	
 	ItemSpawner->RemoveItem(ItemSpawner->CurrentItem);
 	ItemSpawner->SpawnRandomItem();
 	SetGameState(ESnakeGameState::Playing);
 	GetWorld()->GetTimerManager().SetTimer(MoveTimer, this,
 		&ASnakeGameManager::StepMove,
-		0.25f,
+		GlobalStepInterval,
 		true);
+}
+
+void ASnakeGameManager::RegisterSnake(ASnake* InSnake)
+{
+	if (InSnake == nullptr) return;
+	
+	Snakes.Add(InSnake);
+
+	InSnake->OnDied.AddUObject(this, &ASnakeGameManager::OnSnakeDied);
+}
+
+void ASnakeGameManager::OnSnakeDied(ASnake* Snake)
+{
+	if (Snake == PlayerSnake)
+	{
+		TriggerGameOver();
+	}
+}
+
+void ASnakeGameManager::TriggerGameOver()
+{
+	if (bGameOver) return;
+	bGameOver = true;
+
+	// 1) 停止 Timer
+	GetWorld()->GetTimerManager().ClearTimer(MoveTimer);
+	
+	// 2) UI / 结束流程（你自己接）
+	UE_LOG(LogTemp, Warning, TEXT("GAME OVER"));
+	SetGameState(ESnakeGameState::GameOver);
 }
 

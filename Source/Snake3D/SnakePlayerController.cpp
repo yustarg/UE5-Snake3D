@@ -6,11 +6,15 @@
 #include "CameraRig.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
-#include "Snake.h"
 #include "Subsystems/LocalPlayer/SnakeCameraSubsystem.h"
 #include "SnakeGameManager.h"
 #include "Camera/CameraActor.h"
 #include "Kismet/GameplayStatics.h"
+
+FIntPoint ASnakePlayerController::GetNextDirection(const ASnake* Snake)
+{
+	return CachedDirection;
+}
 
 void ASnakePlayerController::BeginPlay()
 {
@@ -82,34 +86,22 @@ void ASnakePlayerController::BindInput()
 
 void ASnakePlayerController::OnUp(const FInputActionValue& Value)
 {
-	if (SnakeGameManager->PlayerSnake->Direction != ESnakeDirection::Down)
-	{
-		SnakeGameManager->PlayerSnake->SetDirection(ESnakeDirection::Up);
-	}
+	CachedDirection = {1, 0};
 }
 
 void ASnakePlayerController::OnDown(const FInputActionValue& Value)
 {
-	if (SnakeGameManager->PlayerSnake->Direction != ESnakeDirection::Up)
-	{
-		SnakeGameManager->PlayerSnake->SetDirection(ESnakeDirection::Down);
-	}
+	CachedDirection = {-1, 0};
 }
 
 void ASnakePlayerController::OnLeft(const FInputActionValue& Value)
 {
-	if (SnakeGameManager->PlayerSnake->Direction != ESnakeDirection::Right)
-	{
-		SnakeGameManager->PlayerSnake->SetDirection(ESnakeDirection::Left);
-	}
+	CachedDirection = {0, -1};
 }
 
 void ASnakePlayerController::OnRight(const FInputActionValue& Value)
 {
-	if (SnakeGameManager->PlayerSnake->Direction != ESnakeDirection::Left)
-	{
-		SnakeGameManager->PlayerSnake->SetDirection(ESnakeDirection::Right);
-	}
+	CachedDirection = {0, 1};
 }
 
 void ASnakePlayerController::OnRestart(const FInputActionValue& Value)
@@ -125,7 +117,7 @@ void ASnakePlayerController::BindGameState()
 	SnakeGameManager->OnGameStateChanged.AddUObject(this, &ASnakePlayerController::OnGameStateChanged);
 }
 
-void ASnakePlayerController::OnGameStateChanged(ESnakeGameState NewState)
+void ASnakePlayerController::OnGameStateChanged(const ESnakeGameState NewState)
 {
 	if (NewState == ESnakeGameState::GameOver)
 	{

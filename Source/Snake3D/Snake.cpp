@@ -4,6 +4,7 @@
 #include "SnakeSegment.h"
 #include "Buff/SnakeBuff.h"
 #include "Effect/SnakeEffect.h"
+#include "Interface/SnakeDirectionProvider.h"
 #include "Subsystems/World/SnakeGridSubsystem.h"
 
 // Sets default values
@@ -29,50 +30,11 @@ void ASnake::Tick(float DeltaTime)
 
 }
 
-void ASnake::Initialize()
+void ASnake::Initialize(const FIntPoint InHeadGrid)
 {
-	HeadGrid = {0, 0};
-	BodyGrids = { {-1, 0}, {-2, 0} };
-	PrevHeadGrid = HeadGrid;
-}
-
-void ASnake::SetDirection(ESnakeDirection NewDirection)
-{
-	Direction = NewDirection;
-}
-
-void ASnake::StepMove()
-{
-	PrevHeadGrid = HeadGrid;
-	
-	FIntPoint NewHeadGrid(0, 0);
-	switch (Direction)
-	{
-	case ESnakeDirection::Left:
-		NewHeadGrid = HeadGrid + FIntPoint(0, -1);
-		break;
-	case ESnakeDirection::Right:
-		NewHeadGrid = HeadGrid + FIntPoint(0, 1);
-		break;
-	case ESnakeDirection::Up:
-		NewHeadGrid = HeadGrid + FIntPoint(1, 0);
-		break;
-	case ESnakeDirection::Down:
-		NewHeadGrid = HeadGrid + FIntPoint(-1, 0);
-		break;
-	}
-	
-	BodyGrids.Insert(HeadGrid, 0);
-	HeadGrid = NewHeadGrid;
-	
-	if (!bPendingGrow)
-	{
-		BodyGrids.Pop();
-	}
-	else
-	{
-		bPendingGrow = false;
-	}
+	HeadGrid = InHeadGrid;
+	//BodyGrids = { {-1, 0}, {-2, 0} };
+	NextHeadGrid = HeadGrid;
 }
 
 void ASnake::SyncSegments()
@@ -102,7 +64,7 @@ void ASnake::SyncSegments()
 	{
 		ASnakeSegment* Head = Cast<ASnakeSegment>(Segments[0]);
 		Head->SetSegmentType(ESnakeSegmentType::Head);
-		Head->SetFacingDirection(HeadGrid - PrevHeadGrid);
+		Head->SetFacingDirection(Direction);
 		Head->SetActorLocation(GridSubsystem->GridToWorld(HeadGrid));
 	}
 	
@@ -119,7 +81,19 @@ void ASnake::SyncSegments()
 	}
 }
 
-void ASnake::Restart()
+void ASnake::SetDirectionProvider(const TScriptInterface<ISnakeDirectionProvider>& InProvider)
+{
+	DirectionProvider = InProvider;
+}
+
+void ASnake::Die()
+{    
+	if (!bAlive) return;
+	bAlive = false;
+	OnDied.Broadcast(this);
+}
+
+void ASnake::Restart(FIntPoint InHeadGrid)
 {
 	for (AActor* Seg : Segments)
 	{
@@ -127,14 +101,75 @@ void ASnake::Restart()
 	}
 	Segments.Empty();
 	
-	HeadGrid = FIntPoint(0, 0);
-	BodyGrids = {
-		FIntPoint(-1, 0),
-		FIntPoint(-2, 0)
-	};
-	PrevHeadGrid = HeadGrid;
+	HeadGrid = InHeadGrid;
+	NextHeadGrid = HeadGrid;
 	
 	SpawnInitialSegments();
+}
+
+void ASnake::TickLogic(const float DeltaTime)
+{
+	if (!bAlive)
+	{
+		bMoveThisStep = false;
+		return;
+	}
+
+	MoveAccumulator += DeltaTime;
+	if (MoveAccumulator >= MoveInterval)
+	{
+		MoveAccumulator -= MoveInterval;
+		bMoveThisStep = true;
+	}
+	else
+	{
+		bMoveThisStep = false;
+	}
+}
+
+void ASnake::ComputeNextHead()
+{
+	if (!bAlive || !bMoveThisStep) return;
+
+	if (DirectionProvider)
+	{
+		Direction = DirectionProvider->GetNextDirection(this);
+	}
+	
+	NextHeadGrid = HeadGrid + Direction;
+}
+
+void ASnake::ApplyMoveWithTarget(const FIntPoint& Target)
+{
+	if (!bAlive || !bMoveThisStep) return;
+	BodyGrids.Insert(HeadGrid, 0);
+	HeadGrid = Target;
+	
+	if (!bPendingGrow)
+	{
+		BodyGrids.Pop();
+	}
+	else
+	{
+		bPendingGrow = false;
+	}
+}
+
+void ASnake::ApplyMove()
+{
+	if (!bAlive || !bMoveThisStep) return;
+
+	BodyGrids.Insert(HeadGrid, 0);
+	HeadGrid = NextHeadGrid;
+	
+	if (!bPendingGrow)
+	{
+		BodyGrids.Pop();
+	}
+	else
+	{
+		bPendingGrow = false;
+	}
 }
 
 TArray<FIntPoint> ASnake::GetHeadAndBody() const
@@ -187,6 +222,7 @@ void ASnake::SetMoveInterval(float NewMoveInterval)
 	
 	MoveInterval = FMath::Clamp(NewMoveInterval, MinInterval, MaxInterval);
 	OnSpeedChanged.Broadcast();
+	UE_LOG(LogTemp, Warning, TEXT("SetMoveInterval %f"), MoveInterval);
 }
 
 void ASnake::Grow()

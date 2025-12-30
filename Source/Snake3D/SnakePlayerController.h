@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Interface/SnakeDirectionProvider.h"
 #include "SnakePlayerController.generated.h"
 
 enum class ESnakeGameState : uint8;
@@ -16,9 +17,12 @@ class UInputAction;
  * 
  */
 UCLASS()
-class SNAKE3D_API ASnakePlayerController : public APlayerController
+class SNAKE3D_API ASnakePlayerController : public APlayerController, public ISnakeDirectionProvider
 {
 	GENERATED_BODY()
+
+public:
+	virtual FIntPoint GetNextDirection(const ASnake* Snake) override;	
 	
 protected:
 	virtual void BeginPlay() override;
@@ -47,6 +51,8 @@ private:
 	
 	UPROPERTY()
 	ASnakeGameManager* SnakeGameManager;
+	
+	FIntPoint CachedDirection = {1, 0};
 	
 	void CacheSnakeGameManager();
 	void ApplyInitialCamera();
