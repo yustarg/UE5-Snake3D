@@ -6,8 +6,7 @@
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "SnakeCameraSubsystem.generated.h"
 
-class ASnakeGameManager;
-enum class ESnakeGameState : uint8;
+enum class ESnakeMatchState : uint8;
 class ACameraRig;
 
 /**
@@ -22,10 +21,12 @@ public:
 	void RegisterCameraRig(ACameraRig* CameraRig);
 	ACameraRig* GetCurrentCameraRig() const;
 	
-	void BindToGameManager(ASnakeGameManager* GM);
+protected:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	
 private:
 	UPROPERTY()
 	TObjectPtr<ACameraRig> CurrentRig;
 	
-	void HandleGameStateChanged(ESnakeGameState NewGameState);
+	void HandleGameStateChanged(ESnakeMatchState NewGameState);
 };

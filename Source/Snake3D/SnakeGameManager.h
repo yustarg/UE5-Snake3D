@@ -13,15 +13,6 @@ class USnakeGridSubsystem;
 class ASnakeItem;
 class ASnake;
 
-UENUM(BlueprintType)
-enum class ESnakeGameState : uint8
-{
-	Playing,
-	GameOver
-};
-
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStateChanged, ESnakeGameState)
-
 UCLASS()
 class SNAKE3D_API ASnakeGameManager : public AActor
 {
@@ -38,17 +29,21 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void StepMove();
+	
+	/* ===== 流程接口（由 GameMode 调用） ===== */
+	void StartGame();
+	void StopGame();
 	void RestartGame();
+	
+	DECLARE_MULTICAST_DELEGATE(FOnPlayerSnakeDied);
+	FOnPlayerSnakeDied OnPlayerSnakeDied;
+	
+	void StepMove();
 	void RegisterSnake(ASnake* InSnake);
 	USnakeGridSubsystem* GetGridSubsystem() const { return GridSubsystem; }
-	
-	FOnGameStateChanged OnGameStateChanged;
-	
-	ESnakeGameState GameState = ESnakeGameState::Playing;
 
 private:
-	void SetGameState(ESnakeGameState NewState);
+	void Initialize();
 	
 	const float GlobalStepInterval = 0.05f;
 	FTimerHandle MoveTimer;
@@ -56,9 +51,7 @@ private:
 	
 	void SpawnPlayerSnake();
 	void SpawnAISnakes();
-	void OnSnakeDied(ASnake* Snake);
-	void TriggerGameOver();
-	bool bGameOver = false;
+	void OnSnakeDied(ASnake* Snake) const;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Snake")
 	TSubclassOf<ASnake> PlayerSnakeClass;

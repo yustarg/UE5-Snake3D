@@ -12,15 +12,6 @@ class USnakeBuff;
 enum class ESnakeEffectType : uint8;
 class USnakeGridSubsystem;
 
-UENUM(BlueprintType)
-enum class ESnakeDirection : uint8
-{
-	Up,
-	Down,
-	Left,
-	Right
-};
-
 DECLARE_MULTICAST_DELEGATE(FOnSnakeSpeedChanged);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSnakeDied, ASnake*);
 

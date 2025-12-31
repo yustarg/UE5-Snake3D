@@ -9,6 +9,7 @@
 #include "Subsystems/LocalPlayer/SnakeCameraSubsystem.h"
 #include "SnakeGameManager.h"
 #include "Camera/CameraActor.h"
+#include "GameState/SnakeGameState.h"
 #include "Kismet/GameplayStatics.h"
 
 FIntPoint ASnakePlayerController::GetNextDirection(const ASnake* Snake)
@@ -53,7 +54,6 @@ void ASnakePlayerController::ApplyInitialCamera()
 					SetViewTarget(Cam, Params);
 				}
 			}
-			CamSys->BindToGameManager(SnakeGameManager);
 		}
 	}
 }
@@ -106,20 +106,29 @@ void ASnakePlayerController::OnRight(const FInputActionValue& Value)
 
 void ASnakePlayerController::OnRestart(const FInputActionValue& Value)
 {
-	if (SnakeGameManager && SnakeGameManager->GameState == ESnakeGameState::GameOver)
+	if (SnakeGameManager)
 	{
-		SnakeGameManager->RestartGame();
+		if (const ASnakeGameState* GS = GetWorld()->GetGameState<ASnakeGameState>())
+		{
+			if (GS->GetMatchState() == ESnakeMatchState::GameOver)
+			{
+				SnakeGameManager->RestartGame();
+			}
+		}
 	}
 }
 
 void ASnakePlayerController::BindGameState()
 {
-	SnakeGameManager->OnGameStateChanged.AddUObject(this, &ASnakePlayerController::OnGameStateChanged);
+	if (ASnakeGameState* GS = GetWorld()->GetGameState<ASnakeGameState>())
+	{
+		GS->OnMatchStateChanged.AddUObject(this, &ASnakePlayerController::OnGameStateChanged);
+	}
 }
 
-void ASnakePlayerController::OnGameStateChanged(const ESnakeGameState NewState)
+void ASnakePlayerController::OnGameStateChanged(const ESnakeMatchState NewState)
 {
-	if (NewState == ESnakeGameState::GameOver)
+	if (NewState == ESnakeMatchState::GameOver)
 	{
 		SetIgnoreMoveInput(true);
 		SetIgnoreLookInput(true);

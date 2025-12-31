@@ -7,7 +7,7 @@
 #include "Interface/SnakeDirectionProvider.h"
 #include "SnakePlayerController.generated.h"
 
-enum class ESnakeGameState : uint8;
+enum class ESnakeMatchState : uint8;
 struct FInputActionValue;
 class ASnakeGameManager;
 class UInputMappingContext;
@@ -65,5 +65,5 @@ private:
 	void OnRestart(const FInputActionValue& Value);
 	
 	void BindGameState();
-	void OnGameStateChanged(ESnakeGameState NewState);
+	void OnGameStateChanged(ESnakeMatchState NewState);
 };

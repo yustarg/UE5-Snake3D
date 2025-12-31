@@ -2,29 +2,37 @@
 
 
 #include "SnakeCameraSubsystem.h"
-#include "Snake3D/SnakeGameManager.h"
+#include "Snake3D/GameState/SnakeGameState.h"
 
 ACameraRig* USnakeCameraSubsystem::GetCurrentCameraRig() const
 {
 	return CurrentRig;
 }
 
-void USnakeCameraSubsystem::BindToGameManager(ASnakeGameManager* GM)
+void USnakeCameraSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	if (!GM) return;
+	Super::Initialize(Collection);
 	
-	GM->OnGameStateChanged.AddUObject(this, &USnakeCameraSubsystem::HandleGameStateChanged);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetGameState<ASnakeGameState>()
+			->OnMatchStateChanged.AddUObject(
+				this,
+				&USnakeCameraSubsystem::HandleGameStateChanged
+			);
+	}
 }
 
-void USnakeCameraSubsystem::HandleGameStateChanged(ESnakeGameState NewGameState)
+void USnakeCameraSubsystem::HandleGameStateChanged(ESnakeMatchState NewGameState)
 {
+	// TODO
 	// switch (NewGameState)
 	// {
-	// case ESnakeGameState::Playing:
+	// case ESnakeMatchState::Playing:
 	// 	SetCameraMode(ECameraMode::Gameplay);
 	// 	break;
 	//
-	// case ESnakeGameState::GameOver:
+	// case ESnakeMatchState::GameOver:
 	// 	SetCameraMode(ECameraMode::GameOver);
 	// 	break;
 	// }

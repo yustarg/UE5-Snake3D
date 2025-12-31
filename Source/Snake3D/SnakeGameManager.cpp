@@ -23,15 +23,13 @@ void ASnakeGameManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	Initialize();
+}
+
+void ASnakeGameManager::Initialize()
+{
 	GridSubsystem = GetWorld()->GetSubsystem<USnakeGridSubsystem>();
-	
-	SpawnPlayerSnake();
-	SpawnAISnakes();
-	StartStepTimer();
-	
 	ItemSpawner->Initialize();
-	ItemSpawner->SpawnRandomItem();
-	
 	UWallWrapRule* WrapRule = NewObject<UWallWrapRule>(this);
 	ActiveRules.Add(WrapRule);
 }
@@ -43,10 +41,43 @@ void ASnakeGameManager::Tick(float DeltaTime)
 
 }
 
+void ASnakeGameManager::StartGame()
+{
+	SpawnPlayerSnake();
+	SpawnAISnakes();
+	StartStepTimer();
+	ItemSpawner->SpawnRandomItem();
+}
+
+void ASnakeGameManager::StopGame()
+{
+	// 1) 停止 Timer
+	GetWorld()->GetTimerManager().ClearTimer(MoveTimer);
+	
+	// 2) UI / 结束流程（你自己接）
+	UE_LOG(LogTemp, Warning, TEXT("GAME OVER"));
+}
+
+void ASnakeGameManager::RestartGame()
+{
+	GridSubsystem->Clear();
+	for (auto Snake : Snakes)
+	{
+		const FIntPoint BirthPoint = GridSubsystem->GetRandomFreeCell();
+		GridSubsystem->UpdateDynamicOccupied({BirthPoint});
+		Snake->Restart(BirthPoint);
+	}
+	
+	ItemSpawner->RemoveItem(ItemSpawner->CurrentItem);
+	ItemSpawner->SpawnRandomItem();
+	GetWorld()->GetTimerManager().SetTimer(MoveTimer, this,
+		&ASnakeGameManager::StepMove,
+		GlobalStepInterval,
+		true);
+}
+
 void ASnakeGameManager::StepMove()
 {
-	if (bGameOver) return;
-
 	const float Delta = GlobalStepInterval;
 
 	// ① Buff 时间
@@ -132,14 +163,6 @@ void ASnakeGameManager::StepMove()
 	}
 }
 
-void ASnakeGameManager::SetGameState(const ESnakeGameState NewState)
-{
-	if (GameState == NewState) return;
-	
-	GameState = NewState;
-	OnGameStateChanged.Broadcast(NewState);
-}
-
 void ASnakeGameManager::StartStepTimer()
 {
 	UWorld* World = GetWorld();
@@ -182,25 +205,6 @@ void ASnakeGameManager::SpawnAISnakes()
 	}
 }
 
-void ASnakeGameManager::RestartGame()
-{
-	GridSubsystem->Clear();
-	for (auto Snake : Snakes)
-	{
-		const FIntPoint BirthPoint = GridSubsystem->GetRandomFreeCell();
-		GridSubsystem->UpdateDynamicOccupied({BirthPoint});
-		Snake->Restart(BirthPoint);
-	}
-	
-	ItemSpawner->RemoveItem(ItemSpawner->CurrentItem);
-	ItemSpawner->SpawnRandomItem();
-	SetGameState(ESnakeGameState::Playing);
-	GetWorld()->GetTimerManager().SetTimer(MoveTimer, this,
-		&ASnakeGameManager::StepMove,
-		GlobalStepInterval,
-		true);
-}
-
 void ASnakeGameManager::RegisterSnake(ASnake* InSnake)
 {
 	if (InSnake == nullptr) return;
@@ -210,24 +214,11 @@ void ASnakeGameManager::RegisterSnake(ASnake* InSnake)
 	InSnake->OnDied.AddUObject(this, &ASnakeGameManager::OnSnakeDied);
 }
 
-void ASnakeGameManager::OnSnakeDied(ASnake* Snake)
+void ASnakeGameManager::OnSnakeDied(ASnake* Snake) const
 {
 	if (Snake == PlayerSnake)
 	{
-		TriggerGameOver();
+		OnPlayerSnakeDied.Broadcast();
 	}
-}
-
-void ASnakeGameManager::TriggerGameOver()
-{
-	if (bGameOver) return;
-	bGameOver = true;
-
-	// 1) 停止 Timer
-	GetWorld()->GetTimerManager().ClearTimer(MoveTimer);
-	
-	// 2) UI / 结束流程（你自己接）
-	UE_LOG(LogTemp, Warning, TEXT("GAME OVER"));
-	SetGameState(ESnakeGameState::GameOver);
 }
 
