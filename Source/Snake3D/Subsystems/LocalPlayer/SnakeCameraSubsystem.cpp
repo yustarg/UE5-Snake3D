@@ -9,18 +9,16 @@ ACameraRig* USnakeCameraSubsystem::GetCurrentCameraRig() const
 	return CurrentRig;
 }
 
-void USnakeCameraSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void USnakeCameraSubsystem::BindToGameState()
 {
-	Super::Initialize(Collection);
-	
-	if (UWorld* World = GetWorld())
-	{
-		World->GetGameState<ASnakeGameState>()
-			->OnMatchStateChanged.AddUObject(
-				this,
-				&USnakeCameraSubsystem::HandleGameStateChanged
-			);
-	}
+	// if (const UWorld* World = GetWorld())
+	// {
+	// 	World->GetGameState<ASnakeGameState>()
+	// 		->OnMatchStateChanged.AddUObject(
+	// 			this,
+	// 			&USnakeCameraSubsystem::HandleGameStateChanged
+	// 		);
+	// }
 }
 
 void USnakeCameraSubsystem::HandleGameStateChanged(ESnakeMatchState NewGameState)

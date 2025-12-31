@@ -54,6 +54,7 @@ void ASnakePlayerController::ApplyInitialCamera()
 					SetViewTarget(Cam, Params);
 				}
 			}
+			CamSys->BindToGameState();
 		}
 	}
 }

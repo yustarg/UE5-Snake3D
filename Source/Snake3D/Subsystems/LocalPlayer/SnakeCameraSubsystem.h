@@ -20,9 +20,7 @@ class SNAKE3D_API USnakeCameraSubsystem : public ULocalPlayerSubsystem
 public:
 	void RegisterCameraRig(ACameraRig* CameraRig);
 	ACameraRig* GetCurrentCameraRig() const;
-	
-protected:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	void BindToGameState();
 	
 private:
 	UPROPERTY()
