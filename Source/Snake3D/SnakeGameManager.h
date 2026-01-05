@@ -45,6 +45,7 @@ public:
 private:
 	void Initialize();
 	void RestartGame();
+	void CleanGame();
 	
 	const float GlobalStepInterval = 0.05f;
 	FTimerHandle MoveTimer;
@@ -52,6 +53,7 @@ private:
 	
 	void SpawnPlayerSnake();
 	void SpawnAISnakes();
+	void SpawnItems() const;
 	void OnSnakeDied(ASnake* Snake) const;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Snake")

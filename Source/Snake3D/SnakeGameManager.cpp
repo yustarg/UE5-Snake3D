@@ -44,7 +44,7 @@ void ASnakeGameManager::Tick(float DeltaTime)
 void ASnakeGameManager::Reset()
 {
 	Super::Reset();
-	
+
 	RestartGame();
 }
 
@@ -52,8 +52,8 @@ void ASnakeGameManager::StartGame()
 {
 	SpawnPlayerSnake();
 	SpawnAISnakes();
+	SpawnItems();
 	StartStepTimer();
-	ItemSpawner->SpawnRandomItem();
 }
 
 void ASnakeGameManager::StopGame()
@@ -67,20 +67,17 @@ void ASnakeGameManager::StopGame()
 
 void ASnakeGameManager::RestartGame()
 {
+	CleanGame();
+}
+
+void ASnakeGameManager::CleanGame()
+{
 	GridSubsystem->Clear();
-	for (auto Snake : Snakes)
+	for (const auto Snake : Snakes)
 	{
-		const FIntPoint BirthPoint = GridSubsystem->GetRandomFreeCell();
-		GridSubsystem->UpdateDynamicOccupied({BirthPoint});
-		Snake->Restart(BirthPoint);
+		Snake->Destroy();
 	}
-	
-	ItemSpawner->RemoveItem(ItemSpawner->CurrentItem);
-	ItemSpawner->SpawnRandomItem();
-	GetWorld()->GetTimerManager().SetTimer(MoveTimer, this,
-		&ASnakeGameManager::StepMove,
-		GlobalStepInterval,
-		true);
+	Snakes.Empty();
 }
 
 void ASnakeGameManager::StepMove()
@@ -210,6 +207,16 @@ void ASnakeGameManager::SpawnAISnakes()
 		Snake->SetDirectionProvider(AIProvider);
 		RegisterSnake(Snake);
 	}
+}
+
+void ASnakeGameManager::SpawnItems() const
+{
+	if (ItemSpawner->CurrentItem)
+	{
+		ItemSpawner->RemoveItem(ItemSpawner->CurrentItem);
+	}
+	
+	ItemSpawner->SpawnRandomItem();
 }
 
 void ASnakeGameManager::RegisterSnake(ASnake* InSnake)

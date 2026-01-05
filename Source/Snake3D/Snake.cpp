@@ -23,6 +23,21 @@ void ASnake::BeginPlay()
 	GridSubsystem = GetWorld()->GetSubsystem<USnakeGridSubsystem>();
 }
 
+void ASnake::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Snake EndPlay: %s"), *GetName());
+	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+
+	for (const auto Segment : Segments)
+	{
+		Segment->Destroy();
+	}
+
+	Segments.Empty();
+
+	Super::EndPlay(EndPlayReason);
+}
+
 // Called every frame
 void ASnake::Tick(float DeltaTime)
 {
