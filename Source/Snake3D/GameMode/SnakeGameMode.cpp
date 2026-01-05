@@ -29,6 +29,19 @@ void ASnakeGameMode::SetMatchState(const ESnakeMatchState NewState) const
 	}
 }
 
+void ASnakeGameMode::RequestRestart()
+{
+	ASnakeGameState* GS = GetGameState<ASnakeGameState>();
+	if (GS && GS->GetMatchState() == ESnakeMatchState::GameOver)
+	{
+		return;
+	}
+	
+	SetMatchState(ESnakeMatchState::Waiting);
+	ResetLevel();
+	SetMatchState(ESnakeMatchState::Playing);
+}
+
 void ASnakeGameMode::BeginPlay()
 {
 	Super::BeginPlay();

@@ -2,38 +2,41 @@
 
 
 #include "SnakeCameraSubsystem.h"
-#include "Snake3D/GameState/SnakeGameState.h"
 
-ACameraRig* USnakeCameraSubsystem::GetCurrentCameraRig() const
-{
-	return CurrentRig;
-}
+#include "Camera/CameraActor.h"
+#include "Snake3D/CameraRig.h"
+#include "Snake3D/GameState/SnakeGameState.h"
 
 void USnakeCameraSubsystem::BindToGameState()
 {
-	// if (const UWorld* World = GetWorld())
-	// {
-	// 	World->GetGameState<ASnakeGameState>()
-	// 		->OnMatchStateChanged.AddUObject(
-	// 			this,
-	// 			&USnakeCameraSubsystem::HandleGameStateChanged
-	// 		);
-	// }
+	if (ASnakeGameState* GS = GetWorld()->GetGameState<ASnakeGameState>())
+	{
+		GS->OnMatchStateChanged.AddUObject(this, &USnakeCameraSubsystem::HandleGameStateChanged);
+		HandleGameStateChanged(GS->GetMatchState());
+	}
 }
 
-void USnakeCameraSubsystem::HandleGameStateChanged(ESnakeMatchState NewGameState)
+void USnakeCameraSubsystem::SetCameraViewTarget() const
 {
-	// TODO
-	// switch (NewGameState)
-	// {
-	// case ESnakeMatchState::Playing:
-	// 	SetCameraMode(ECameraMode::Gameplay);
-	// 	break;
-	//
-	// case ESnakeMatchState::GameOver:
-	// 	SetCameraMode(ECameraMode::GameOver);
-	// 	break;
-	// }
+	const ULocalPlayer* LocalPlayer = GetLocalPlayer();
+	if (const auto* Rig = GetCurrentCameraRig())
+	{
+		if (auto* Cam = Rig->GetCameraActor())
+		{
+			FViewTargetTransitionParams Params;
+			Params.BlendTime = 0.5f;
+			Params.BlendFunction = VTBlend_EaseInOut;
+			LocalPlayer->GetPlayerController(GetWorld())->SetViewTarget(Cam, Params);
+		}
+	}
+}
+
+void USnakeCameraSubsystem::HandleGameStateChanged(const ESnakeMatchState NewGameState) const
+{
+	if (NewGameState == ESnakeMatchState::Playing)
+	{
+		SetCameraViewTarget();
+	}
 }
 
 void USnakeCameraSubsystem::RegisterCameraRig(ACameraRig* CameraRig)

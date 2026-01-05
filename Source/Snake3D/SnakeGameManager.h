@@ -29,11 +29,11 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	virtual void Reset() override;
 	
 	/* ===== 流程接口（由 GameMode 调用） ===== */
 	void StartGame();
 	void StopGame();
-	void RestartGame();
 	
 	DECLARE_MULTICAST_DELEGATE(FOnPlayerSnakeDied);
 	FOnPlayerSnakeDied OnPlayerSnakeDied;
@@ -44,6 +44,7 @@ public:
 
 private:
 	void Initialize();
+	void RestartGame();
 	
 	const float GlobalStepInterval = 0.05f;
 	FTimerHandle MoveTimer;

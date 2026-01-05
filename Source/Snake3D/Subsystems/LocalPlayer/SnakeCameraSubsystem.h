@@ -19,12 +19,14 @@ class SNAKE3D_API USnakeCameraSubsystem : public ULocalPlayerSubsystem
 	
 public:
 	void RegisterCameraRig(ACameraRig* CameraRig);
-	ACameraRig* GetCurrentCameraRig() const;
+	ACameraRig* GetCurrentCameraRig() const { return CurrentRig; }
+	
 	void BindToGameState();
+	void SetCameraViewTarget() const;
 	
 private:
 	UPROPERTY()
 	TObjectPtr<ACameraRig> CurrentRig;
 	
-	void HandleGameStateChanged(ESnakeMatchState NewGameState);
+	void HandleGameStateChanged(ESnakeMatchState NewGameState) const;
 };

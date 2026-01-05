@@ -30,8 +30,8 @@ void ASnakeGameManager::Initialize()
 {
 	GridSubsystem = GetWorld()->GetSubsystem<USnakeGridSubsystem>();
 	ItemSpawner->Initialize();
-	UWallWrapRule* WrapRule = NewObject<UWallWrapRule>(this);
-	ActiveRules.Add(WrapRule);
+	// UWallWrapRule* WrapRule = NewObject<UWallWrapRule>(this);
+	// ActiveRules.Add(WrapRule);
 }
 
 // Called every frame
@@ -39,6 +39,13 @@ void ASnakeGameManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ASnakeGameManager::Reset()
+{
+	Super::Reset();
+	
+	RestartGame();
 }
 
 void ASnakeGameManager::StartGame()

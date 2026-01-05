@@ -19,9 +19,12 @@ class SNAKE3D_API ASnakeGameMode : public AGameModeBase
 public:
 	void SetMatchState(ESnakeMatchState NewState) const;
 	
+	UFUNCTION(BlueprintCallable)
+	void RequestRestart();
+	
 protected:
 	virtual void BeginPlay() override;
-
+	
 private:
 	void OnEnterWaiting() const;
 	void OnEnterPlaying() const;

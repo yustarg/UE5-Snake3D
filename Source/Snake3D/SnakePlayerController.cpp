@@ -3,12 +3,11 @@
 
 #include "SnakePlayerController.h"
 
-#include "CameraRig.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Subsystems/LocalPlayer/SnakeCameraSubsystem.h"
 #include "SnakeGameManager.h"
-#include "Camera/CameraActor.h"
+#include "GameMode/SnakeGameMode.h"
 #include "GameState/SnakeGameState.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -29,6 +28,7 @@ void ASnakePlayerController::BeginPlay()
 
 void ASnakePlayerController::CacheSnakeGameManager()
 {
+	// TODO can be clean later
 	TArray<AActor*> Found;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASnakeGameManager::StaticClass(), Found);
 	
@@ -44,16 +44,6 @@ void ASnakePlayerController::ApplyInitialCamera()
 	{
 		if (auto* CamSys = LP->GetSubsystem<USnakeCameraSubsystem>())
 		{
-			if (auto* Rig = CamSys->GetCurrentCameraRig())
-			{
-				if (auto* Cam = Rig->GetCameraActor())
-				{
-					FViewTargetTransitionParams Params;
-                    Params.BlendTime = 0.5f;
-                    Params.BlendFunction = VTBlend_EaseInOut;
-					SetViewTarget(Cam, Params);
-				}
-			}
 			CamSys->BindToGameState();
 		}
 	}
@@ -107,15 +97,9 @@ void ASnakePlayerController::OnRight(const FInputActionValue& Value)
 
 void ASnakePlayerController::OnRestart(const FInputActionValue& Value)
 {
-	if (SnakeGameManager)
+	if (ASnakeGameMode* Mode = GetWorld()->GetAuthGameMode<ASnakeGameMode>())
 	{
-		if (const ASnakeGameState* GS = GetWorld()->GetGameState<ASnakeGameState>())
-		{
-			if (GS->GetMatchState() == ESnakeMatchState::GameOver)
-			{
-				SnakeGameManager->RestartGame();
-			}
-		}
+		Mode->RequestRestart();
 	}
 }
 
@@ -124,6 +108,7 @@ void ASnakePlayerController::BindGameState()
 	if (ASnakeGameState* GS = GetWorld()->GetGameState<ASnakeGameState>())
 	{
 		GS->OnMatchStateChanged.AddUObject(this, &ASnakePlayerController::OnGameStateChanged);
+		OnGameStateChanged(GS->GetMatchState());
 	}
 }
 
