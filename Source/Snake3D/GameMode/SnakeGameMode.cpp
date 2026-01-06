@@ -6,6 +6,12 @@
 #include "EngineUtils.h"
 #include "Snake3D/SnakeGameManager.h"
 #include "Snake3D/GameState/SnakeGameState.h"
+#include "Snake3D/PlayerState/SnakePlayerState.h"
+
+ASnakeGameMode::ASnakeGameMode()
+{
+	PlayerStateClass = ASnakePlayerState::StaticClass();
+}
 
 void ASnakeGameMode::SetMatchState(const ESnakeMatchState NewState) const
 {

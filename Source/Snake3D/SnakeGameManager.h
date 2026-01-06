@@ -34,6 +34,9 @@ public:
 	/* ===== 流程接口（由 GameMode 调用） ===== */
 	void StartGame();
 	void StopGame();
+
+	DECLARE_MULTICAST_DELEGATE(FOnPlayerEatFood, int32);
+	FOnPlayerEatFood OnPlayerEatFood;
 	
 	DECLARE_MULTICAST_DELEGATE(FOnPlayerSnakeDied);
 	FOnPlayerSnakeDied OnPlayerSnakeDied;

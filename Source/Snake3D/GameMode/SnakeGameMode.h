@@ -17,6 +17,8 @@ class SNAKE3D_API ASnakeGameMode : public AGameModeBase
 	GENERATED_BODY()
 	
 public:
+	ASnakeGameMode();
+	
 	void SetMatchState(ESnakeMatchState NewState) const;
 	
 	UFUNCTION(BlueprintCallable)

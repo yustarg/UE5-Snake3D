@@ -106,7 +106,9 @@ void ASnakeGameManager::StepMove()
 
 	// ④ 计算 NextHead
 	for (ASnake* Snake : Snakes)
+	{
 		Snake->ComputeNextHead();
+	}
 
 	// ⑤ Occupancy
 	GridSubsystem->RebuildDynamicOccupied();
