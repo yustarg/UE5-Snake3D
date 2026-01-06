@@ -3,7 +3,14 @@
 
 #include "ItemSpeedUp.h"
 
+#include "Snake3D/Snake.h"
+
 AItemSpeedUp::AItemSpeedUp()
 {
 	Effect = ESnakeEffectType::SpeedUp;
+}
+
+void AItemSpeedUp::OnEaten(ASnake* Snake)
+{
+	// Speed Up is a buff now
 }

@@ -59,7 +59,7 @@ public:
 	TArray<FIntPoint> GetHeadAndBody() const;
 	
 	// Effect & Buff Related
-	void ApplyEffect(ESnakeEffectType Effect);
+	void Grow();
 	void AddBuff(TSubclassOf<USnakeBuff> BuffClass);
 	void TickBuffs(float DeltaTime);
 
@@ -94,7 +94,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category="Snake")
 	TSubclassOf<AActor> SnakeSegmentClass;
 	void SpawnInitialSegments();
-	void Grow();
 	bool bPendingGrow = false;
 	
 	/* ===== Buff ===== */

@@ -198,18 +198,6 @@ TArray<FIntPoint> ASnake::GetHeadAndBody() const
 	return Result;
 }
 
-void ASnake::ApplyEffect(const ESnakeEffectType Effect)
-{
-	switch (Effect)
-	{
-		case ESnakeEffectType::Grow:
-		Grow();
-		break;
-		default:
-		break;
-	}
-}
-
 void ASnake::AddBuff(TSubclassOf<USnakeBuff> BuffClass)
 {
 	if (!BuffClass) return;

@@ -4,17 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "SnakeItem.h"
-#include "ItemSpeedUp.generated.h"
+#include "ItemBuff.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SNAKE3D_API AItemSpeedUp : public ASnakeItem
+class SNAKE3D_API AItemBuff : public ASnakeItem
 {
 	GENERATED_BODY()
-	
+
 public:
-	AItemSpeedUp();
 	virtual void OnEaten(ASnake* Snake) override;
+	
+protected:
+	UPROPERTY(EditDefaultsOnly, Category="Item")
+	TSubclassOf<USnakeBuff> BuffClass;
+
 };

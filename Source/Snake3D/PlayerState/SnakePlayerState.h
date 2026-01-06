@@ -16,9 +16,6 @@ class SNAKE3D_API ASnakePlayerState : public APlayerState
 
 public:
 	UPROPERTY(BlueprintReadOnly)
-	int32 Score = 0;
-
-	UPROPERTY(BlueprintReadOnly)
 	int32 FoodsEaten = 0;
 
 	void AddScore(int32 Delta);

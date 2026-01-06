@@ -154,18 +154,13 @@ void ASnakeGameManager::StepMove()
 		}
 	}
 
-	if (PlayerSnake->GetHead() == ItemSpawner->CurrentItem->GetGrid())
+	for (ASnake* Snake : Snakes)
 	{
-		if (ItemSpawner->CurrentItem->IsBuff())
+		if (Snake->GetHead() == ItemSpawner->CurrentItem->GetGrid())
 		{
-			PlayerSnake->AddBuff(ItemSpawner->CurrentItem->GetBuffClass());
+			ItemSpawner->CurrentItem->OnEaten(Snake);
+			ItemSpawner->SpawnRandomItem();
 		}
-		else
-		{
-			PlayerSnake->ApplyEffect(ItemSpawner->CurrentItem->GetEffect());
-		}
-		
-		ItemSpawner->SpawnRandomItem();
 	}
 }
 

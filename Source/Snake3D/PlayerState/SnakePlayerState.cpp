@@ -5,5 +5,5 @@
 
 void ASnakePlayerState::AddScore(const int32 Delta)
 {
-	Score += Delta;
+	SetScore(GetScore() + Delta);
 }

@@ -22,23 +22,18 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
-	FIntPoint Grid;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Item")
-	ESnakeEffectType Effect;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Item")
-	TSubclassOf<USnakeBuff> BuffClass;
 
-public:	
-	ESnakeEffectType GetEffect() const { return Effect; }
-	TSubclassOf<USnakeBuff> GetBuffClass() const { return BuffClass; }
-	bool IsBuff() const {return BuffClass != nullptr;}
-	void SetGrid(const FIntPoint& InGrid);
-	FIntPoint GetGrid() const { return Grid; }
-	
-protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> StaticMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category="Item")
+	ESnakeEffectType Effect;
+
+	FIntPoint Grid;
+
+public:
+	virtual void OnEaten(ASnake* Snake) PURE_VIRTUAL(ASnakeBase::OnEaten, );
+	
+	void SetGrid(const FIntPoint& InGrid);
+	FIntPoint GetGrid() const { return Grid; }
 };

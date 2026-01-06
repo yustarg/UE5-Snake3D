@@ -14,4 +14,6 @@ class SNAKE3D_API AItemFood : public ASnakeItem
 public:	
 	// Sets default values for this actor's properties
 	AItemFood();
+
+	virtual void OnEaten(ASnake* Snake) override;
 };

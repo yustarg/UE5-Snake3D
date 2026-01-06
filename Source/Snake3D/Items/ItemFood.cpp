@@ -3,6 +3,8 @@
 
 #include "ItemFood.h"
 
+#include "Snake3D/Snake.h"
+
 // Sets default values
 AItemFood::AItemFood()
 {
@@ -10,4 +12,9 @@ AItemFood::AItemFood()
 	PrimaryActorTick.bCanEverTick = false;
 	
 	Effect = ESnakeEffectType::Grow;
+}
+
+void AItemFood::OnEaten(ASnake* Snake)
+{
+	Snake->Grow();
 }
