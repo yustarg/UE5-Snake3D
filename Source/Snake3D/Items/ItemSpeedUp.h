@@ -16,5 +16,5 @@ class SNAKE3D_API AItemSpeedUp : public ASnakeItem
 	
 public:
 	AItemSpeedUp();
-	virtual void OnEaten(ASnake* Snake) override;
+	virtual void OnConsumed(ASnake* Snake) override;
 };

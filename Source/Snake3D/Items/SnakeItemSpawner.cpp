@@ -54,6 +54,7 @@ void ASnakeItemSpawner::SpawnRandomItem()
 	CurrentItem = GetWorld()->SpawnActor<ASnakeItem>(ItemClass);
 	CurrentItem->SetGrid(Cell);
 	GridSystem->RegisterItemCell(Cell);
+	OnItemSpawned.Broadcast(CurrentItem);
 }
 
 void ASnakeItemSpawner::RemoveItem(ASnakeItem* Item)

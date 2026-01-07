@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Snake.generated.h"
 
+class ASnakePlayerState;
 class ISnakeDirectionProvider;
 class ASnake;
 class USnakeBuff;
@@ -34,6 +35,7 @@ public:
 	void Die();
 	void Restart(FIntPoint InHeadGrid);
 	FOnSnakeDied OnDied;
+	ASnakePlayerState* OwningPlayerState; 
 	
 	/* ===== Step 驱动 ===== */
 	void TickLogic(float DeltaTime);

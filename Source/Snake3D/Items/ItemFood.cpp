@@ -14,7 +14,9 @@ AItemFood::AItemFood()
 	Effect = ESnakeEffectType::Grow;
 }
 
-void AItemFood::OnEaten(ASnake* Snake)
+void AItemFood::OnConsumed(ASnake* Snake)
 {
+	Super::OnConsumed(Snake);
+
 	Snake->Grow();
 }

@@ -6,6 +6,10 @@
 #include "GameFramework/GameModeBase.h"
 #include "SnakeGameMode.generated.h"
 
+class ASnakePlayerState;
+class ASnake;
+class ASnakeItem;
+class ASnakeItemSpawner;
 class ASnakeGameManager;
 enum class ESnakeMatchState : uint8;
 /**
@@ -18,6 +22,8 @@ class SNAKE3D_API ASnakeGameMode : public AGameModeBase
 	
 public:
 	ASnakeGameMode();
+
+	ASnakePlayerState* CreatePlayerState() const;
 	
 	void SetMatchState(ESnakeMatchState NewState) const;
 	
@@ -31,8 +37,14 @@ private:
 	void OnEnterWaiting() const;
 	void OnEnterPlaying() const;
 	void OnEnterGameOver() const;
+
+	void HandleItemSpawned(ASnakeItem* Item);
+	void HandleItemConsumed(ASnake* Snake, ASnakeItem* Item);
+	void AddScoreForSnake(const ASnake* Snake, int32 Score);
 	
-private:
 	UPROPERTY()
 	TObjectPtr<ASnakeGameManager> GameManager;
+
+	UPROPERTY()
+	TObjectPtr<ASnakeItemSpawner> ItemSpawner;
 };

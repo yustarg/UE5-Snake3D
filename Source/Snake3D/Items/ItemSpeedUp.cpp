@@ -10,7 +10,8 @@ AItemSpeedUp::AItemSpeedUp()
 	Effect = ESnakeEffectType::SpeedUp;
 }
 
-void AItemSpeedUp::OnEaten(ASnake* Snake)
+// Speed Up is a buff now
+void AItemSpeedUp::OnConsumed(ASnake* Snake)
 {
-	// Speed Up is a buff now
+	Super::OnConsumed(Snake);
 }

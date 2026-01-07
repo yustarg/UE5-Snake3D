@@ -41,7 +41,8 @@ public:
 	void StepMove();
 	void RegisterSnake(ASnake* InSnake);
 	USnakeGridSubsystem* GetGridSubsystem() const { return GridSubsystem; }
-
+	TObjectPtr<ASnakeItemSpawner> GetItemSpawner() const { return ItemSpawner; }
+	
 private:
 	void Initialize();
 	void RestartGame();

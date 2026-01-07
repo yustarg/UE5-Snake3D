@@ -5,7 +5,9 @@
 
 #include "Snake3D/Snake.h"
 
-void AItemBuff::OnEaten(ASnake* Snake)
+void AItemBuff::OnConsumed(ASnake* Snake)
 {
+	Super::OnConsumed(Snake);
+	
 	Snake->AddBuff(BuffClass);	
 }

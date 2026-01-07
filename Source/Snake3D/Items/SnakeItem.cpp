@@ -23,6 +23,11 @@ void ASnakeItem::BeginPlay()
 	
 }
 
+void ASnakeItem::OnConsumed(ASnake* Snake)
+{
+	OnItemConsumed.Broadcast(Snake, this);
+}
+
 void ASnakeItem::SetGrid(const FIntPoint& InGrid)
 {
 	Grid = InGrid;

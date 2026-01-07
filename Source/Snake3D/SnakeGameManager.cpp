@@ -4,6 +4,7 @@
 #include "SnakeGameManager.h"
 #include "Snake.h"
 #include "SnakeAIController.h"
+#include "GameMode/SnakeGameMode.h"
 #include "Interface/GameRule.h"
 #include "Items/SnakeItem.h"
 #include "Items/SnakeItemSpawner.h"
@@ -158,7 +159,7 @@ void ASnakeGameManager::StepMove()
 	{
 		if (Snake->GetHead() == ItemSpawner->CurrentItem->GetGrid())
 		{
-			ItemSpawner->CurrentItem->OnEaten(Snake);
+			ItemSpawner->CurrentItem->OnConsumed(Snake);
 			ItemSpawner->SpawnRandomItem();
 		}
 	}
@@ -187,7 +188,7 @@ void ASnakeGameManager::SpawnPlayerSnake()
 	
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 	PlayerSnake->SetDirectionProvider(PC);
-	
+	PlayerSnake->OwningPlayerState =  GetWorld()->GetAuthGameMode<ASnakeGameMode>()->CreatePlayerState();
 	RegisterSnake(PlayerSnake);
 }
 
@@ -202,6 +203,7 @@ void ASnakeGameManager::SpawnAISnakes()
 		GridSubsystem->UpdateDynamicOccupied({BirthPoint});
 		Snake->Initialize(BirthPoint);
 		Snake->SetDirectionProvider(AIProvider);
+		Snake->OwningPlayerState =  GetWorld()->GetAuthGameMode<ASnakeGameMode>()->CreatePlayerState();
 		RegisterSnake(Snake);
 	}
 }

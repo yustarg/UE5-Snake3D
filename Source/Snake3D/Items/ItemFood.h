@@ -15,5 +15,5 @@ public:
 	// Sets default values for this actor's properties
 	AItemFood();
 
-	virtual void OnEaten(ASnake* Snake) override;
+	virtual void OnConsumed(ASnake* Snake) override;
 };

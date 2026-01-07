@@ -10,6 +10,12 @@
 
 class ASnake;
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(
+	FOnItemConsumed,
+	ASnake*,
+	ASnakeItem*
+)
+
 UCLASS(Abstract)
 class SNAKE3D_API ASnakeItem : public AActor
 {
@@ -32,7 +38,8 @@ protected:
 	FIntPoint Grid;
 
 public:
-	virtual void OnEaten(ASnake* Snake) PURE_VIRTUAL(ASnakeBase::OnEaten, );
+	virtual void OnConsumed(ASnake* Snake);
+	FOnItemConsumed OnItemConsumed;
 	
 	void SetGrid(const FIntPoint& InGrid);
 	FIntPoint GetGrid() const { return Grid; }

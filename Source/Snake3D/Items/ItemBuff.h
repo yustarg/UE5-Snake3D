@@ -15,7 +15,7 @@ class SNAKE3D_API AItemBuff : public ASnakeItem
 	GENERATED_BODY()
 
 public:
-	virtual void OnEaten(ASnake* Snake) override;
+	virtual void OnConsumed(ASnake* Snake) override;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Item")

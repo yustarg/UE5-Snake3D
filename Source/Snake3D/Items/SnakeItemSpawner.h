@@ -21,6 +21,10 @@ struct FItemSpawnEntry
 	float Weight = 1.f;	
 };
 
+DECLARE_MULTICAST_DELEGATE_OneParam(
+	FOnItemSpawned,
+	ASnakeItem*
+);
 
 UCLASS()
 class SNAKE3D_API ASnakeItemSpawner : public AActor
@@ -45,7 +49,9 @@ public:
 	
 	UPROPERTY()
 	TObjectPtr<ASnakeItem> CurrentItem;
-	
+
+	FOnItemSpawned OnItemSpawned;
+
 private:
 	UPROPERTY()
 	USnakeGridSubsystem* GridSystem;
